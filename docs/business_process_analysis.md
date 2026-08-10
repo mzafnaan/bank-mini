@@ -212,18 +212,3 @@ Nasabah mengakses informasi rekening miliknya.
 | Customer Information | Nasabah |
 
 ---
-
-# 7. Scope Boundary
-
-Business process yang didokumentasikan pada dokumen ini hanya mencakup proses yang dijelaskan pada dokumen UKK.
-
-Dokumen ini tidak membahas:
-
-- Desain antarmuka pengguna.
-- Struktur database.
-- Desain API.
-- Arsitektur sistem.
-- Teknologi yang digunakan.
-- Implementasi aplikasi web maupun mobile.
-
-Aspek-aspek tersebut akan dibahas pada dokumen tersendiri.
