@@ -1,12 +1,5 @@
 # Domain Model
 
-| Attribute | Value |
-|-----------|-------|
-| Project | E-Teller Bank Mini Sekolah |
-| Document | Domain Model |
-| Version | 1.0 |
-| Status | Draft |
-
 ---
 
 # 1. Purpose
