@@ -1,12 +1,5 @@
 # Requirement Analysis
 
-| Attribute | Value |
-|-----------|-------|
-| Project | E-Teller Bank Mini Sekolah |
-| Document | Requirement Analysis |
-| Version | 1.0 |
-| Status | Draft |
-
 ---
 
 # 1. Purpose

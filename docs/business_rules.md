@@ -1,12 +1,5 @@
 # Business Rules
 
-| Attribute | Value |
-|-----------|-------|
-| Project | E-Teller Bank Mini Sekolah |
-| Document | Business Rules |
-| Version | 1.0 |
-| Status | Draft |
-
 ---
 
 # 1. Purpose
