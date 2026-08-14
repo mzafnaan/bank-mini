@@ -2,31 +2,51 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $fillable = [
+        'name',
+        'username',
+        'password',
+        'role',
+        'status',
+    ];
+
+    protected $hidden = [
+        'password',
+    ];
+
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'teller_id');
+    }
+
+    public function withdrawalRequests(): HasMany
+    {
+        return $this->hasMany(WithdrawalRequest::class, 'teller_id');
+    }
+
+    public function dailyReportsAsTeller(): HasMany
+    {
+        return $this->hasMany(DailyReport::class, 'teller_id');
+    }
+
+    public function dailyReportsAsSupervisor(): HasMany
+    {
+        return $this->hasMany(DailyReport::class, 'supervisor_id');
     }
 }
