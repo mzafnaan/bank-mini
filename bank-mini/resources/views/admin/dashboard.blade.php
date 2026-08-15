@@ -35,7 +35,7 @@
                         <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-bold">{{ $searchResults['customers']->count() }}</span>
                     </h2>
                     @if($searchResults['customers']->count() > 0)
-                        <a href="{{ route('admin.customers', ['search' => $search]) }}" class="text-xs font-semibold text-blue-600 hover:underline">Kelola Nasabah &rarr;</a>
+                        <a href="{{ route('admin.customers', ['search' => $search]) }}" class="text-xs font-semibold text-blue-600 hover:underline">Kelola Nasabah</a>
                     @endif
                 </div>
                 
@@ -79,7 +79,7 @@
                         <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-bold">{{ $searchResults['users']->count() }}</span>
                     </h2>
                     @if($searchResults['users']->count() > 0)
-                        <a href="{{ route('admin.users', ['search' => $search]) }}" class="text-xs font-semibold text-blue-600 hover:underline">Kelola Pengguna &rarr;</a>
+                        <a href="{{ route('admin.users', ['search' => $search]) }}" class="text-xs font-semibold text-blue-600 hover:underline">Kelola Pengguna</a>
                     @endif
                 </div>
 
@@ -119,7 +119,7 @@
                         <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-bold">{{ $searchResults['journals']->count() }}</span>
                     </h2>
                     @if($searchResults['journals']->count() > 0)
-                        <a href="{{ route('admin.journals', ['search' => $search]) }}" class="text-xs font-semibold text-blue-600 hover:underline">Lihat Semua Jurnal &rarr;</a>
+                        <a href="{{ route('admin.journals', ['search' => $search]) }}" class="text-xs font-semibold text-blue-600 hover:underline">Lihat Semua Jurnal</a>
                     @endif
                 </div>
 

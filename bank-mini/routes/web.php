@@ -34,10 +34,32 @@ Route::middleware(['auth:web', 'role:administrator'])->prefix('admin')->name('ad
     Route::get('/journals', [AdminController::class, 'journals'])->name('journals');
 });
 
-// Teller & Supervisor Placeholders
-Route::middleware(['auth:web', 'role:teller'])->get('/teller/dashboard', function () {
-    return 'Dashboard Teller - ' . auth()->user()->name;
-})->name('teller.dashboard');
+use App\Http\Controllers\Web\TellerController;
+
+// Teller Routes
+Route::middleware(['auth:web', 'role:teller'])->prefix('teller')->name('teller.')->group(function () {
+    Route::get('/dashboard', [TellerController::class, 'dashboard'])->name('dashboard');
+
+    // Customer / Account Identification
+    Route::get('/identification', [TellerController::class, 'identification'])->name('identification');
+
+    // Cash Deposit
+    Route::get('/deposit', [TellerController::class, 'depositForm'])->name('deposit');
+    Route::post('/deposit', [TellerController::class, 'storeDeposit'])->name('deposit.store');
+
+    // Cash Withdrawal
+    Route::get('/withdrawal', [TellerController::class, 'withdrawalForm'])->name('withdrawal');
+    Route::post('/withdrawal', [TellerController::class, 'storeWithdrawal'])->name('withdrawal.store');
+    Route::post('/withdrawal-request', [TellerController::class, 'storeWithdrawalRequest'])->name('withdrawal.request');
+
+    // Teller Transaction History & Receipts
+    Route::get('/transactions', [TellerController::class, 'transactions'])->name('transactions');
+    Route::get('/transactions/{transaction}/receipt', [TellerController::class, 'receipt'])->name('transactions.receipt');
+
+    // Daily Closing / Report
+    Route::get('/daily-report', [TellerController::class, 'dailyReport'])->name('daily-report');
+    Route::post('/daily-report', [TellerController::class, 'storeDailyReport'])->name('daily-report.store');
+});
 
 Route::middleware(['auth:web', 'role:supervisor'])->get('/supervisor/dashboard', function () {
     return 'Dashboard Supervisor - ' . auth()->user()->name;
