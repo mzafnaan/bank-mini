@@ -70,7 +70,7 @@
         </form>
 
         <div class="mt-8 pt-6 border-t border-slate-100 text-center text-xs text-slate-400">
-            &copy; {{ date('Y') }} Bank Mini Sekolah. All rights reserved.
+            &copy; {{ date('Y') }} Bank Mini Sekolah
         </div>
     </div>
 

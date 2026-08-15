@@ -8,6 +8,13 @@
         <p class="text-sm text-slate-500">Pencatatan pembukuan ganda (double-entry bookkeeping) seluruh transaksi keuangan sistem.</p>
     </div>
 
+    @if(request('search'))
+        <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center justify-between text-xs text-blue-900">
+            <span>Filter pencarian: <strong>"{{ request('search') }}"</strong> (Ditemukan {{ $journals->count() }} data)</span>
+            <a href="{{ route('admin.journals') }}" class="font-semibold text-blue-700 hover:underline">Reset Filter</a>
+        </div>
+    @endif
+
     <!-- Journals Table Card -->
     <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">

@@ -100,12 +100,27 @@
     <div class="flex-1 pl-64 flex flex-col min-h-screen">
         
         <!-- Top Banner / Header space -->
-        <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-20">
-            <div class="text-sm text-slate-500">
-                Sistem Informasi <span class="font-semibold text-slate-800">Bank Mini Sekolah</span>
+        <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-20 gap-4">
+            <div class="flex items-center gap-4 flex-1 max-w-xl">
+                <form action="{{ request()->url() }}" method="GET" class="relative w-full flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIS, Nama, Rekening, User... (Tekan Enter)"
+                               class="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                        <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        @if(request('search'))
+                            <a href="{{ request()->url() }}" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs" title="Reset pencarian">&times;</a>
+                        @endif
+                    </div>
+                    <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition flex-shrink-0">
+                        Cari
+                    </button>
+                </form>
             </div>
-            <div class="text-xs text-slate-400">
-                Administrator Mode
+            <div class="text-xs text-slate-500 flex items-center gap-2 flex-shrink-0">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                <span>Administrator Mode</span>
             </div>
         </header>
 

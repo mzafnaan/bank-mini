@@ -14,6 +14,13 @@
         </button>
     </div>
 
+    @if(request('search'))
+        <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center justify-between text-xs text-blue-900">
+            <span>Filter pencarian: <strong>"{{ request('search') }}"</strong> (Ditemukan {{ $users->count() }} data)</span>
+            <a href="{{ route('admin.users') }}" class="font-semibold text-blue-700 hover:underline">Reset Filter</a>
+        </div>
+    @endif
+
     <!-- Users Table Card -->
     <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">

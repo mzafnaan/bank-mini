@@ -14,6 +14,13 @@
         </button>
     </div>
 
+    @if(request('search'))
+        <div class="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center justify-between text-xs text-blue-900">
+            <span>Filter pencarian: <strong>"{{ request('search') }}"</strong> (Ditemukan {{ $customers->count() }} data)</span>
+            <a href="{{ route('admin.customers') }}" class="font-semibold text-blue-700 hover:underline">Reset Filter</a>
+        </div>
+    @endif
+
     <!-- Customers Table Card -->
     <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
@@ -171,5 +178,108 @@
             document.getElementById('edit_phone').value = customer.phone || '';
             document.getElementById('modalEditCustomer').classList.remove('hidden');
         }
+
+        function copyCred(elementId, btn) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = btn.innerText;
+                btn.innerText = 'Tersalin! ✓';
+                btn.classList.remove('bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
+                btn.classList.add('bg-blue-600', 'text-white', 'border-blue-600');
+                setTimeout(() => {
+                    btn.innerText = originalText;
+                    btn.classList.remove('bg-blue-600', 'text-white', 'border-blue-600');
+                    btn.classList.add('bg-blue-50', 'text-blue-600', 'hover:bg-blue-100');
+                }, 1500);
+            });
+        }
     </script>
+
+    <!-- Modal Credentials Nasabah Baru -->
+    @if(session('new_customer_credentials'))
+        <div id="modalCustomerCredentials" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full overflow-hidden">
+                <!-- Header -->
+                <div class="bg-blue-600 px-6 py-4 text-white flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 bg-white/20 rounded-md flex items-center justify-center text-white flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-white leading-tight">Nasabah Berhasil Didaftarkan</h3>
+                            <p class="text-xs text-blue-100 mt-0.5">Informasi akun login & PIN transaksi nasabah</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('modalCustomerCredentials').remove()" class="text-blue-200 hover:text-white text-2xl font-bold leading-none">&times;</button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-4">
+                    <div class="bg-slate-50 rounded-md p-4 border border-slate-200">
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama Nasabah</div>
+                        <div class="text-base font-bold text-slate-900 mt-0.5">{{ session('new_customer_credentials')['name'] }}</div>
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-3">Nomor Rekening</div>
+                        <div class="mt-1">
+                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-mono font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                                {{ session('new_customer_credentials')['account_number'] }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider">KREDENSIAL AKSES NASABAH</h4>
+                        
+                        <!-- Username -->
+                        <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-md border border-slate-200">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Username (NIS)</span>
+                                <span class="text-sm font-mono font-bold text-slate-900 mt-0.5 block" id="cred-username">{{ session('new_customer_credentials')['username'] }}</span>
+                            </div>
+                            <button type="button" onclick="copyCred('cred-username', this)" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition shadow-sm">
+                                Salin
+                            </button>
+                        </div>
+
+                        <!-- Password -->
+                        <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-md border border-slate-200">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Password Default</span>
+                                <span class="text-sm font-mono font-bold text-slate-900 mt-0.5 block" id="cred-password">{{ session('new_customer_credentials')['password'] }}</span>
+                            </div>
+                            <button type="button" onclick="copyCred('cred-password', this)" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition shadow-sm">
+                                Salin
+                            </button>
+                        </div>
+
+                        <!-- PIN -->
+                        <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-md border border-slate-200">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">PIN Transaksi (6 Digit)</span>
+                                <span class="text-sm font-mono font-bold text-slate-900 tracking-widest mt-0.5 block" id="cred-pin">{{ session('new_customer_credentials')['pin'] }}</span>
+                            </div>
+                            <button type="button" onclick="copyCred('cred-pin', this)" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition shadow-sm">
+                                Salin
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 bg-blue-50 border border-blue-200 text-blue-800 text-xs rounded-md flex items-start gap-2.5 leading-relaxed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Berikan kredensial ini kepada nasabah. Nasabah dapat mengubah Password & PIN setelah login pertama kali.</span>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-end">
+                    <button type="button" onclick="document.getElementById('modalCustomerCredentials').remove()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md shadow-sm transition">
+                        Tutup & Selesai
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection

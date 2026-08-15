@@ -16,6 +16,7 @@ use App\Services\CustomerService;
 use App\Services\JournalService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -30,8 +31,10 @@ class AdminController extends Controller
     /**
      * Admin Dashboard Overview.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
+        $search = trim($request->input('search', ''));
+
         $stats = [
             'total_users' => User::count(),
             'total_customers' => Customer::count(),
@@ -39,21 +42,32 @@ class AdminController extends Controller
             'total_balance' => BankAccount::sum('balance'),
         ];
 
+        $searchResults = null;
+        if ($search !== '') {
+            $searchResults = [
+                'customers' => $this->customerService->getAllCustomers($search),
+                'users' => $this->userService->getAllUsers($search),
+                'accounts' => $this->bankAccountService->getAllAccounts($search),
+                'journals' => $this->journalService->getAllJournals($search),
+            ];
+        }
+
         $recentJournals = JournalEntry::with(['transaction.bankAccount.customer', 'transaction.teller'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recentJournals'));
+        return view('admin.dashboard', compact('stats', 'recentJournals', 'search', 'searchResults'));
     }
 
     /**
      * User Management.
      */
-    public function users(): View
+    public function users(Request $request): View
     {
-        $users = $this->userService->getAllUsers();
-        return view('admin.users', compact('users'));
+        $search = trim($request->input('search', ''));
+        $users = $this->userService->getAllUsers($search);
+        return view('admin.users', compact('users', 'search'));
     }
 
     public function storeUser(StoreUserRequest $request): RedirectResponse
@@ -77,20 +91,27 @@ class AdminController extends Controller
     /**
      * Customer Management & Onboarding.
      */
-    public function customers(): View
+    public function customers(Request $request): View
     {
-        $customers = $this->customerService->getAllCustomers();
-        return view('admin.customers', compact('customers'));
+        $search = trim($request->input('search', ''));
+        $customers = $this->customerService->getAllCustomers($search);
+        return view('admin.customers', compact('customers', 'search'));
     }
 
     public function storeCustomer(StoreCustomerRequest $request): RedirectResponse
     {
         try {
             $customer = $this->customerService->createCustomer($request->validated());
-            return redirect()->route('admin.customers')->with(
-                'success',
-                "Nasabah '{$customer->name}' berhasil didaftarkan. Rekening ({$customer->bankAccount->account_number}) dan Akun Mobile siap digunakan."
-            );
+            return redirect()->route('admin.customers')->with([
+                'success' => "Nasabah '{$customer->name}' berhasil didaftarkan.",
+                'new_customer_credentials' => [
+                    'name' => $customer->name,
+                    'account_number' => $customer->bankAccount->account_number ?? '-',
+                    'username' => $customer->customerAccount->username ?? strtolower($customer->nis),
+                    'password' => $customer->plain_password ?? ('Bk' . $customer->nis . '!'),
+                    'pin' => $customer->plain_pin ?? substr(str_pad((string) abs(crc32($customer->nis)), 6, '0', STR_PAD_LEFT), 0, 6),
+                ],
+            ]);
         } catch (\Exception $e) {
             return back()->withInput()->withErrors(['error' => 'Gagal mendaftarkan nasabah: ' . $e->getMessage()]);
         }
@@ -105,18 +126,20 @@ class AdminController extends Controller
     /**
      * Account Management List.
      */
-    public function accounts(): View
+    public function accounts(Request $request): View
     {
-        $accounts = $this->bankAccountService->getAllAccounts();
-        return view('admin.accounts', compact('accounts'));
+        $search = trim($request->input('search', ''));
+        $accounts = $this->bankAccountService->getAllAccounts($search);
+        return view('admin.accounts', compact('accounts', 'search'));
     }
 
     /**
      * Accounting Audit.
      */
-    public function journals(): View
+    public function journals(Request $request): View
     {
-        $journals = $this->journalService->getAllJournals();
-        return view('admin.journals', compact('journals'));
+        $search = trim($request->input('search', ''));
+        $journals = $this->journalService->getAllJournals($search);
+        return view('admin.journals', compact('journals', 'search'));
     }
 }

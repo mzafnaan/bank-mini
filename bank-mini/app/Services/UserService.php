@@ -8,9 +8,19 @@ use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    public function getAllUsers(): Collection
+    public function getAllUsers(?string $search = null): Collection
     {
-        return User::orderBy('name', 'asc')->get();
+        $query = User::orderBy('name', 'asc');
+
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('username', 'like', "%{$search}%")
+                  ->orWhere('role', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->get();
     }
 
     public function createUser(array $data): User

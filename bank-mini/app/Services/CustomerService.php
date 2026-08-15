@@ -11,9 +11,22 @@ use Illuminate\Support\Facades\Hash;
 
 class CustomerService
 {
-    public function getAllCustomers(): Collection
+    public function getAllCustomers(?string $search = null): Collection
     {
-        return Customer::with(['bankAccount', 'customerAccount'])->orderBy('name', 'asc')->get();
+        $query = Customer::with(['bankAccount', 'customerAccount'])->orderBy('name', 'asc');
+
+        if (! empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('nis', 'like', "%{$search}%")
+                  ->orWhere('class', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhereHas('bankAccount', fn($bq) => $bq->where('account_number', 'like', "%{$search}%"))
+                  ->orWhereHas('customerAccount', fn($cq) => $cq->where('username', 'like', "%{$search}%"));
+            });
+        }
+
+        return $query->get();
     }
 
     /**
@@ -49,18 +62,22 @@ class CustomerService
             
             // Secure temporary password & PIN unique per customer (hashed)
             $temporaryPassword = 'Bk' . $customer->nis . '!';
-            $temporaryPin = str_pad((string) abs(crc32($customer->nis)), 6, '0', STR_PAD_LEFT);
+            $temporaryPin = substr(str_pad((string) abs(crc32($customer->nis)), 6, '0', STR_PAD_LEFT), 0, 6);
 
             CustomerAccount::create([
                 'customer_id' => $customer->id,
                 'username' => $username,
                 'password' => Hash::make($temporaryPassword),
-                'pin' => Hash::make(substr($temporaryPin, 0, 6)),
+                'pin' => Hash::make($temporaryPin),
                 'first_login' => true,
                 'status' => 'active',
             ]);
 
-            return $customer->load(['bankAccount', 'customerAccount']);
+            $customer->load(['bankAccount', 'customerAccount']);
+            $customer->plain_password = $temporaryPassword;
+            $customer->plain_pin = $temporaryPin;
+
+            return $customer;
         });
     }
 
