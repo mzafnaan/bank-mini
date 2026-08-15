@@ -11,11 +11,11 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         DB::table('users')->insert([
-            [
+            [   
                 'id' => 1,
                 'name' => 'Administrator System',
                 'username' => 'admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('admin123'),
                 'role' => 'administrator',
                 'status' => 'active',
                 'created_at' => now(),
