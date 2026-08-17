@@ -88,59 +88,16 @@
                 @if($stats['daily_report'])
                     @if($stats['daily_report']->status === 'approved')
                         <span class="px-2.5 py-1 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved Supervisor</span>
+                    @elseif($stats['daily_report']->status === 'rejected')
+                        <span class="px-2.5 py-1 rounded text-xs font-semibold bg-red-50 text-red-700 border border-red-200">Ditolak Supervisor</span>
                     @else
-                        <span class="px-2.5 py-1 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">Draft (Menunggu Supervisor)</span>
+                        <span class="px-2.5 py-1 rounded text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">Draft</span>
                     @endif
                 @else
                     <span class="px-2.5 py-1 rounded text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">Belum Disubmit</span>
                 @endif
             </div>
         </div>
-
-    </div>
-
-    <!-- Quick Operational Action Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        
-        <a href="{{ route('teller.identification') }}" class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:border-blue-500 transition group flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            </div>
-            <div>
-                <h3 class="font-bold text-slate-900 text-xs group-hover:text-blue-600 transition">Identifikasi Nasabah</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Cari Rekening & QR Code</p>
-            </div>
-        </a>
-
-        <a href="{{ route('teller.deposit') }}" class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:border-blue-500 transition group flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-            </div>
-            <div>
-                <h3 class="font-bold text-slate-900 text-xs group-hover:text-blue-600 transition">Setoran Tunai</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Terima simpanan nasabah</p>
-            </div>
-        </a>
-
-        <a href="{{ route('teller.withdrawal') }}" class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:border-blue-500 transition group flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
-            </div>
-            <div>
-                <h3 class="font-bold text-slate-900 text-xs group-hover:text-blue-600 transition">Penarikan Tunai</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Otorisasi PIN nasabah</p>
-            </div>
-        </a>
-
-        <a href="{{ route('teller.daily-report') }}" class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm hover:border-blue-500 transition group flex items-center gap-3">
-            <div class="w-10 h-10 rounded bg-blue-50 text-blue-600 flex items-center justify-center font-bold flex-shrink-0 group-hover:bg-blue-600 group-hover:text-white transition">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            </div>
-            <div>
-                <h3 class="font-bold text-slate-900 text-xs group-hover:text-blue-600 transition">Penutupan Kas</h3>
-                <p class="text-[11px] text-slate-500 mt-0.5">Rekonsiliasi akhir hari</p>
-            </div>
-        </a>
 
     </div>
 

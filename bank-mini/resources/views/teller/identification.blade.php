@@ -8,7 +8,7 @@
 
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-900">Identifikasi Rekening & Nasabah</h1>
-        <p class="text-sm text-slate-500">Lakukan identifikasi nasabah menggunakan Nomor Rekening, NIS, Nama, atau Scan QR Code via Kamera Laptop (BR-029 & BR-036).</p>
+        <p class="text-sm text-slate-500">Lakukan identifikasi nasabah menggunakan Nomor Rekening, NIS, Nama, atau Scan QR Code via Kamera.</p>
     </div>
 
     <!-- Search & QR Camera Scanner Input Card -->
@@ -19,7 +19,7 @@
             <div class="flex flex-col sm:flex-row gap-2.5">
                 <div class="relative flex-1">
                     <input type="text" id="search" name="search" value="{{ $search }}" placeholder="Ketik No. Rekening, NIS, Nama, atau Scan QR..." autofocus
-                           class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white font-mono transition">
+                           class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
                     <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
@@ -28,7 +28,7 @@
                 <!-- QR Code Camera Toggle Button -->
                 <button type="button" onclick="toggleCameraScanner()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs rounded-md shadow-sm transition flex items-center justify-center gap-1.5 flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                    <span id="camera-btn-text">Scan QR (Kamera)</span>
+                    <span id="camera-btn-text">Scan QR</span>
                 </button>
 
                 <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition flex items-center justify-center gap-1.5 flex-shrink-0">
@@ -48,7 +48,7 @@
             </div>
             
             <div id="qr-reader" class="w-full max-w-sm mx-auto rounded-md overflow-hidden bg-white border border-slate-300 shadow-sm"></div>
-            <div id="qr-reader-results" class="text-center text-xs text-slate-500 mt-2 font-mono"></div>
+            <div id="qr-reader-results" class="text-center text-xs text-slate-500 mt-2"></div>
         </div>
     </div>
 
@@ -67,7 +67,7 @@
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900">{{ $account->customer?->name }}</h2>
                                 <div class="text-xs text-slate-500 mt-0.5">
-                                    NIS: <strong class="font-mono text-slate-700">{{ $account->customer?->nis }}</strong> • Kelas: <strong class="text-slate-700">{{ $account->customer?->class }}</strong>
+                                    NIS: <strong class="text-slate-700">{{ $account->customer?->nis }}</strong> • Kelas: <strong class="text-slate-700">{{ $account->customer?->class }}</strong>
                                 </div>
                             </div>
                         </div>

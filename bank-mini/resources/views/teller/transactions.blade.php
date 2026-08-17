@@ -23,7 +23,7 @@
             <div>
                 <label for="type" class="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1">Tipe Transaksi</label>
                 <select id="type" name="type" class="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
-                    <option value="">-- Semua Tipe --</option>
+                    <option value=""> Semua Tipe </option>
                     <option value="deposit" {{ $type === 'deposit' ? 'selected' : '' }}>Setoran Tunai</option>
                     <option value="withdrawal" {{ $type === 'withdrawal' ? 'selected' : '' }}>Penarikan Tunai</option>
                 </select>

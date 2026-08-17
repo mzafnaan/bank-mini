@@ -5,7 +5,7 @@
 @section('content')
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-900">Form Penarikan Tunai (Withdrawal)</h1>
-        <p class="text-sm text-slate-500">Lakukan penarikan simpanan nasabah dengan otorisasi PIN (BR-036 ~ BR-047).</p>
+        <p class="text-sm text-slate-500">Lakukan penarikan simpanan nasabah dengan otorisasi PIN.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -22,7 +22,7 @@
                     </label>
                     <div class="flex gap-2">
                         <input type="text" id="account_number" name="account_number" value="{{ old('account_number', $account?->account_number ?? $accountNumber) }}" required placeholder="Contoh: 1000000001"
-                               class="flex-1 px-3.5 py-2 text-sm font-mono font-bold bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                               class="flex-1 px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
                         <button type="button" onclick="lookupAccount()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md transition flex-shrink-0">
                             Cek Rekening
                         </button>
@@ -56,7 +56,7 @@
                     <div class="relative">
                         <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
                         <input type="number" id="amount" name="amount" value="{{ old('amount') }}" min="1000" step="1000" required placeholder="0"
-                               class="w-full pl-10 pr-4 py-2 text-lg font-bold font-mono bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition text-slate-900">
+                               class="w-full pl-10 pr-4 py-2 text-lg font-bold bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition text-slate-900">
                     </div>
 
                     <!-- Quick Amount Presets -->
@@ -111,13 +111,7 @@
                 <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Aturan Penarikan Tunai</h3>
                 <ul class="space-y-1.5 text-xs text-slate-600 list-disc list-inside">
                     <li>Otorisasi menggunakan PIN 6 digit nasabah.</li>
-                    <li>Saldo sisa setelah penarikan minimal Rp 10.000 (BR-044).</li>
-                    <li>Jurnal Akuntansi Otomatis:
-                        <div class="mt-1 font-mono text-[11px] text-slate-700 bg-slate-50 p-2 rounded border border-slate-200">
-                            (Debit) 201 Tabungan Nasabah<br>
-                            (Kredit) 101 Kas
-                        </div>
-                    </li>
+                    <li>Saldo sisa setelah penarikan minimal Rp 10.000.</li>
                 </ul>
             </div>
         </div>

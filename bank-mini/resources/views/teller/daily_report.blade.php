@@ -5,7 +5,7 @@
 @section('content')
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-900">Penutupan Kas Harian (Daily Closing)</h1>
-        <p class="text-sm text-slate-500">Proses rekonsiliasi saldo kas operasional harian Teller dan pengiriman laporan ke Supervisor (BR-048 ~ BR-050).</p>
+        <p class="text-sm text-slate-500">Proses rekonsiliasi saldo kas operasional harian Teller dan pengiriman laporan ke Supervisor.</p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -24,9 +24,13 @@
                             <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs rounded">
                                 Approved Supervisor
                             </span>
+                        @elseif($reportData['existing_report']->status === 'rejected')
+                            <span class="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 font-semibold text-xs rounded">
+                                Ditolak Supervisor
+                            </span>
                         @else
                             <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs rounded">
-                                Status: Draft (Menunggu Supervisor)
+                                Status: Draft menunggu Supervisor
                             </span>
                         @endif
                     @else
@@ -98,7 +102,7 @@
                 <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wider mb-2">Aturan Penutupan Kas</h3>
                 <ul class="space-y-1.5 text-xs text-slate-600 list-disc list-inside">
                     <li>Penutupan kas dilakukan akhir hari jam kerja operasional.</li>
-                    <li><strong>BR-050:</strong> Laporan harian hanya dapat diproses apabila uang fisik <u>sesuai</u> dengan kas sistem.</li>
+                    <li>Laporan harian hanya dapat diproses apabila uang fisik sesuai dengan kas sistem.</li>
                     <li>Status laporan awal adalah <strong>Draft</strong> untuk diverifikasi Supervisor.</li>
                 </ul>
             </div>
