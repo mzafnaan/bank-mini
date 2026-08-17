@@ -13,7 +13,7 @@
             <a href="{{ route('teller.dashboard') }}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
                 &larr; Ke Dashboard
             </a>
-            <button onclick="window.print()" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
+            <button onclick="window.print()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 <span>Cetak Struk</span>
             </button>
@@ -24,13 +24,10 @@
     <div class="max-w-md mx-auto bg-white p-8 rounded-2xl border border-slate-300 shadow-lg print-container print:shadow-none print:border-none print:p-0">
         
         <!-- Receipt Header -->
-        <div class="text-center border-b border-dashed border-slate-300 pb-5 mb-5">
-            <div class="w-12 h-12 bg-emerald-600 text-white font-extrabold text-xl rounded-xl flex items-center justify-center mx-auto mb-2 shadow-sm">
-                BM
-            </div>
+        <div class="text-center border-b border-dashed border-slate-300 pb-4 mb-5">
             <h2 class="text-lg font-extrabold text-slate-900 uppercase tracking-wide">BANK MINI SEKOLAH</h2>
             <p class="text-[11px] text-slate-500 font-medium">Slip Transaksi Operasional Teller</p>
-            <div class="mt-3 inline-block px-3 py-1 bg-slate-100 text-slate-800 font-mono text-xs font-bold rounded-md">
+            <div class="mt-2.5 inline-block px-3 py-1 bg-slate-100 text-slate-800 font-mono text-xs font-bold rounded-md">
                 TRX-{{ str_pad($transaction->id, 6, '0', STR_PAD_LEFT) }}
             </div>
         </div>
@@ -60,7 +57,7 @@
 
             <div class="flex justify-between pt-2 border-t border-slate-100">
                 <span class="text-slate-500">Jenis Transaksi:</span>
-                <span class="font-extrabold uppercase {{ $transaction->type === 'deposit' ? 'text-emerald-700' : 'text-indigo-700' }}">
+                <span class="font-extrabold uppercase {{ $transaction->type === 'deposit' ? 'text-blue-700' : 'text-slate-800' }}">
                     {{ $transaction->type === 'deposit' ? 'SETORAN TUNAI' : 'PENARIKAN TUNAI' }}
                 </span>
             </div>
@@ -74,7 +71,7 @@
 
             <div class="flex justify-between pt-1">
                 <span class="text-slate-500">Saldo Akhir Rekening:</span>
-                <span class="font-mono font-extrabold text-emerald-700">
+                <span class="font-mono font-extrabold text-blue-700">
                     Rp {{ number_format($transaction->bankAccount?->balance ?? 0, 0, ',', '.') }}
                 </span>
             </div>
@@ -86,24 +83,10 @@
 
         </div>
 
-        <!-- Signatures Area -->
-        <div class="grid grid-cols-2 gap-4 text-center text-[10px] text-slate-500 pt-2 mb-6">
-            <div>
-                <p class="mb-10 font-semibold">Tanda Tangan Nasabah</p>
-                <div class="border-b border-slate-400 w-3/4 mx-auto"></div>
-                <p class="mt-1 font-semibold text-slate-700">{{ $transaction->bankAccount?->customer?->name ?? 'Nasabah' }}</p>
-            </div>
-            <div>
-                <p class="mb-10 font-semibold">Petugas Teller</p>
-                <div class="border-b border-slate-400 w-3/4 mx-auto"></div>
-                <p class="mt-1 font-semibold text-slate-700">{{ $transaction->teller?->name ?? auth()->user()->name }}</p>
-            </div>
-        </div>
-
         <!-- Receipt Footer Note -->
-        <div class="text-center text-[10px] text-slate-400 italic">
-            *** Simpan bukti transaksi ini sebagai bukti pembayaran/penarikan yang sah. ***<br>
-            Terima kasih telah bertransaksi di Bank Mini Sekolah.
+        <div class="text-center text-[11px] text-slate-500 leading-relaxed">
+            Harap simpan bukti transaksi ini sebagai bukti transaksi.<br>
+            Terima kasih telah menggunakan layanan Bank Mini Sekolah.
         </div>
 
     </div>

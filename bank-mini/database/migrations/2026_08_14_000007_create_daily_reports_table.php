@@ -27,7 +27,7 @@ return new class extends Migration
             $table->bigInteger('total_deposit')->default(0);
             $table->bigInteger('total_withdrawal')->default(0);
             $table->bigInteger('closing_cash')->default(0);
-            $table->enum('status', ['draft', 'approved'])->default('draft');
+            $table->enum('status', ['draft', 'approved', 'rejected'])->default('draft');
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('created_at')->useCurrent();
 

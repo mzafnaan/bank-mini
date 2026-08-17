@@ -61,10 +61,19 @@ Route::middleware(['auth:web', 'role:teller'])->prefix('teller')->name('teller.'
     Route::post('/daily-report', [TellerController::class, 'storeDailyReport'])->name('daily-report.store');
 });
 
-Route::middleware(['auth:web', 'role:supervisor'])->get('/supervisor/dashboard', function () {
-    return 'Dashboard Supervisor - ' . auth()->user()->name;
-})->name('supervisor.dashboard');
+use App\Http\Controllers\Web\SupervisorController;
+
+// Supervisor Routes
+Route::middleware(['auth:web', 'role:supervisor'])->prefix('supervisor')->name('supervisor.')->group(function () {
+    Route::get('/dashboard', [SupervisorController::class, 'index'])->name('dashboard');
+    Route::get('/reports', [SupervisorController::class, 'reports'])->name('reports');
+    Route::get('/reports/{dailyReport}', [SupervisorController::class, 'show'])->name('reports.show');
+    Route::post('/reports/{dailyReport}/approve', [SupervisorController::class, 'approveReport'])->name('reports.approve');
+    Route::post('/reports/{dailyReport}/reject', [SupervisorController::class, 'rejectReport'])->name('reports.reject');
+    Route::get('/journals', [SupervisorController::class, 'journals'])->name('journals');
+});
 
 Route::middleware(['auth:customer_web', 'role:customer'])->get('/customer/dashboard', function () {
     return 'Dashboard Customer - ' . auth()->user()->username;
 })->name('customer.dashboard');
+
