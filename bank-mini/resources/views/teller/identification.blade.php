@@ -165,7 +165,7 @@
 
     <!-- QR Code Scanner Script -->
     <script>
-        let html5QrcodeScanner = null;
+        let html5Qrcode = null;
         let isCameraActive = false;
 
         function toggleCameraScanner() {
@@ -182,36 +182,72 @@
             document.getElementById('camera-btn-text').innerText = "Tutup Kamera";
             isCameraActive = true;
 
-            if (!html5QrcodeScanner) {
-                html5QrcodeScanner = new Html5QrcodeScanner(
-                    "qr-reader",
-                    { fps: 10, qrbox: { width: 220, height: 220 } },
-                    /* verbose= */ false
-                );
-
-                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            if (!html5Qrcode) {
+                html5Qrcode = new Html5Qrcode("qr-reader");
             }
+
+            const config = {
+                fps: 30,
+                qrbox: function(viewfinderWidth, viewfinderHeight) {
+                    // Use 80% of the viewfinder for larger scan area
+                    let size = Math.min(viewfinderWidth, viewfinderHeight) * 0.8;
+                    return { width: Math.floor(size), height: Math.floor(size) };
+                },
+                aspectRatio: 1.0,
+                formatsToSupport: [
+                    Html5QrcodeSupportedFormats.QR_CODE,
+                    Html5QrcodeSupportedFormats.CODE_128,
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.EAN_13,
+                    Html5QrcodeSupportedFormats.EAN_8,
+                ],
+                experimentalFeatures: {
+                    useBarCodeDetectorIfSupported: true
+                }
+            };
+
+            // Prefer environment (back) camera, fallback to any available camera
+            html5Qrcode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                // Fallback: try user-facing camera if environment fails
+                console.warn("Environment camera failed, trying user camera:", err);
+                html5Qrcode.start(
+                    { facingMode: "user" },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                ).catch(err2 => {
+                    console.error("All cameras failed:", err2);
+                    document.getElementById('qr-reader-results').innerHTML =
+                        '<span class="text-red-500 font-medium">Gagal mengakses kamera. Pastikan izin kamera diberikan.</span>';
+                });
+            });
         }
 
         function stopCameraScanner() {
             const container = document.getElementById('camera-scanner-container');
             container.classList.add('hidden');
-            document.getElementById('camera-btn-text').innerText = "Scan QR (Kamera)";
+            document.getElementById('camera-btn-text').innerText = "Scan QR";
             isCameraActive = false;
 
-            if (html5QrcodeScanner) {
-                html5QrcodeScanner.clear().catch(error => {
-                    console.error("Failed to clear html5QrcodeScanner: ", error);
+            if (html5Qrcode && html5Qrcode.isScanning) {
+                html5Qrcode.stop().then(() => {
+                    console.log("Camera stopped.");
+                }).catch(error => {
+                    console.error("Failed to stop camera: ", error);
                 });
-                html5QrcodeScanner = null;
             }
         }
 
         function onScanSuccess(decodedText, decodedResult) {
             console.log(`Scan successful: ${decodedText}`, decodedResult);
             document.getElementById('search').value = decodedText;
-            
-            // Play a quick beep audio if supported or submit form
+
+            // Auto-submit after successful scan
             stopCameraScanner();
             document.getElementById('identification-form').submit();
         }

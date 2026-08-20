@@ -61,17 +61,17 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($transactions as $trx)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-3.5 text-xs font-mono text-slate-500 whitespace-nowrap">
+                            <td class="px-6 py-3.5 text-xs text-slate-500 whitespace-nowrap">
                                 {{ $trx->created_at ? $trx->created_at->format('d/m/Y H:i') : '-' }}
                             </td>
-                            <td class="px-6 py-3.5 font-mono font-medium text-slate-900">
+                            <td class="px-6 py-3.5 font-medium text-slate-900">
                                 TRX-{{ str_pad($trx->id, 6, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-6 py-3.5">
                                 <span class="font-semibold text-slate-900 block">{{ $trx->bankAccount?->customer?->name ?? 'N/A' }}</span>
                                 <span class="text-xs text-slate-500 block">NIS: {{ $trx->bankAccount?->customer?->nis ?? '-' }}</span>
                             </td>
-                            <td class="px-6 py-3.5 font-mono text-xs font-semibold text-slate-700">
+                            <td class="px-6 py-3.5 text-xs font-semibold text-slate-700">
                                 {{ $trx->bankAccount?->account_number ?? '-' }}
                             </td>
                             <td class="px-6 py-3.5 capitalize">

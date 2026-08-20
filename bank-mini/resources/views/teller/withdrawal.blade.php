@@ -85,7 +85,7 @@
                 <!-- Customer PIN Authorization Input (Light Consistent Theme) -->
                 <div class="p-4 bg-blue-50/70 text-slate-900 rounded-md shadow-sm border border-blue-200">
                     <label for="pin" class="block text-xs font-semibold uppercase tracking-wider text-blue-900 mb-1">
-                        3. Otorisasi PIN Nasabah (6 Digit) <span class="text-red-500">*</span>
+                        3. Otorisasi PIN Nasabah <span class="text-red-500">*</span>
                     </label>
                     <p class="text-xs text-slate-600 mb-2.5">Nasabah memasukkan 6 digit PIN untuk menyetujui penarikan (Default seeder: 123456).</p>
                     <input type="password" id="pin" name="pin" maxlength="6" pattern="[0-9]{6}" required placeholder="••••••••" autocomplete="off"
