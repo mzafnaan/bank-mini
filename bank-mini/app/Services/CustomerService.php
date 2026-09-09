@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Hash;
 
 class CustomerService
 {
+    public function __construct(
+        protected ?BankAccountService $bankAccountService = null
+    ) {
+        $this->bankAccountService = $bankAccountService ?? app(BankAccountService::class);
+    }
+
     public function getAllCustomers(?string $search = null): Collection
     {
         $query = Customer::with(['bankAccount', 'customerAccount'])->orderBy('name', 'asc');
@@ -44,16 +50,27 @@ class CustomerService
                 'phone' => ! empty($data['phone']) ? trim($data['phone']) : null,
             ]);
 
-            // 2. Auto-generate Bank Account (Balance strictly 0)
-            $year = date('Y');
-            $count = BankAccount::count() + 1;
-            $accountNumber = sprintf('REK-%s%04d', $year, $count);
-            $qrCode = 'QR-' . $accountNumber;
+            // Determine Major Code (AK, BR, BD, MP, DKV, RPL, TKJ)
+            $major = ! empty($data['major']) ? strtoupper(trim($data['major'])) : null;
+            $validMajors = ['AK', 'BR', 'BD', 'MP', 'DKV', 'RPL', 'TKJ'];
+
+            if (! $major || ! in_array($major, $validMajors, true)) {
+                if (preg_match('/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i', $customer->class, $matches)) {
+                    $major = strtoupper($matches[1]);
+                } else {
+                    $major = 'RPL';
+                }
+            }
+
+            // 2. Auto-generate Bank Account [KODE JURUSAN]-[NOMOR URUT 3 DIGIT] (Balance strictly 0, status active)
+            $accountNumber = $this->bankAccountService->generateAccountNumber($major);
+            $qrCode = $accountNumber;
 
             BankAccount::create([
                 'customer_id' => $customer->id,
                 'account_number' => $accountNumber,
                 'balance' => 0,
+                'status' => 'active',
                 'qr_code' => $qrCode,
             ]);
 

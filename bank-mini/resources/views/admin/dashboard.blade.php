@@ -55,11 +55,11 @@
                             <tbody class="divide-y divide-slate-100">
                                 @foreach($searchResults['customers'] as $c)
                                     <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-6 py-3 font-mono font-semibold text-slate-700">{{ $c->nis }}</td>
-                                        <td class="px-6 py-3 font-semibold text-slate-900">{{ $c->name }}</td>
-                                        <td class="px-6 py-3 text-slate-600">{{ $c->class }}</td>
-                                        <td class="px-6 py-3">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-mono font-bold rounded bg-blue-50 text-blue-700">
+                                        <td class="px-6 py-3.5 font-semibold text-slate-700">{{ $c->nis }}</td>
+                                        <td class="px-6 py-3.5 font-semibold text-slate-900">{{ $c->name }}</td>
+                                        <td class="px-6 py-3.5 text-slate-600">{{ $c->class }}</td>
+                                        <td class="px-6 py-3.5">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 text-xs font-bold rounded bg-blue-50 text-blue-700">
                                                 {{ $c->bankAccount?->account_number ?? '-' }}
                                             </span>
                                         </td>
@@ -99,10 +99,10 @@
                             <tbody class="divide-y divide-slate-100">
                                 @foreach($searchResults['users'] as $u)
                                     <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-6 py-3 font-semibold text-slate-900">{{ $u->name }}</td>
-                                        <td class="px-6 py-3 font-mono text-slate-700">{{ $u->username }}</td>
-                                        <td class="px-6 py-3 capitalize"><span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">{{ $u->role }}</span></td>
-                                        <td class="px-6 py-3 capitalize"><span class="px-2 py-0.5 text-xs font-medium rounded {{ $u->status === 'active' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-500' }}">{{ $u->status }}</span></td>
+                                        <td class="px-6 py-3.5 font-semibold text-slate-900">{{ $u->name }}</td>
+                                        <td class="px-6 py-3.5 text-slate-700">{{ $u->username }}</td>
+                                        <td class="px-6 py-3.5 capitalize"><span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">{{ $u->role }}</span></td>
+                                        <td class="px-6 py-3.5 capitalize"><span class="px-2 py-0.5 text-xs font-medium rounded {{ $u->status === 'active' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-500' }}">{{ $u->status }}</span></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -140,11 +140,11 @@
                             <tbody class="divide-y divide-slate-100">
                                 @foreach($searchResults['journals'] as $j)
                                     <tr class="hover:bg-slate-50 transition">
-                                        <td class="px-6 py-3 text-xs text-slate-500">{{ $j->created_at ? $j->created_at->format('d/m/Y H:i') : '-' }}</td>
-                                        <td class="px-6 py-3 font-medium text-slate-900">#{{ $j->transaction_id }}</td>
-                                        <td class="px-6 py-3">{{ $j->transaction?->bankAccount?->customer?->name ?? 'N/A' }}</td>
-                                        <td class="px-6 py-3"><span class="px-2 py-0.5 text-xs font-mono font-medium rounded bg-slate-100 text-slate-700">{{ $j->account_code }}</span></td>
-                                        <td class="px-6 py-3 text-right font-medium text-slate-900">Rp {{ number_format($j->amount, 0, ',', '.') }}</td>
+                                        <td class="px-6 py-3.5 text-sm text-slate-500">{{ $j->created_at ? $j->created_at->format('d/m/Y H:i') : '-' }}</td>
+                                        <td class="px-6 py-3.5 font-medium text-slate-900">#{{ $j->transaction_id }}</td>
+                                        <td class="px-6 py-3.5">{{ $j->transaction?->bankAccount?->customer?->name ?? 'N/A' }}</td>
+                                        <td class="px-6 py-3.5"><span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">{{ $j->account_code }}</span></td>
+                                        <td class="px-6 py-3.5 text-right font-medium text-slate-900">Rp {{ number_format($j->amount, 0, ',', '.') }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -209,7 +209,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($recentJournals as $journal)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-3.5 whitespace-nowrap text-slate-500 text-xs">
+                            <td class="px-6 py-3.5 whitespace-nowrap text-slate-500 text-sm">
                                 {{ $journal->created_at ? $journal->created_at->format('d/m/Y H:i') : '-' }}
                             </td>
                             <td class="px-6 py-3.5 font-medium text-slate-900">

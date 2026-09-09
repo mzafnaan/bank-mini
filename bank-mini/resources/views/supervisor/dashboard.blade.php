@@ -120,7 +120,7 @@
                                         <td class="px-6 py-3 text-xs text-slate-500">{{ $j->created_at ? $j->created_at->format('d/m/Y H:i') : '-' }}</td>
                                         <td class="px-6 py-3 font-medium text-slate-900">#{{ $j->transaction_id }}</td>
                                         <td class="px-6 py-3">{{ $j->transaction?->bankAccount?->customer?->name ?? 'N/A' }}</td>
-                                        <td class="px-6 py-3"><span class="px-2 py-0.5 text-xs font-mono font-medium rounded bg-slate-100 text-slate-700">{{ $j->account_code }}</span></td>
+                                        <td class="px-6 py-3"><span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">{{ $j->account_code }}</span></td>
                                         <td class="px-6 py-3 text-right font-medium text-slate-900">Rp {{ number_format($j->amount, 0, ',', '.') }}</td>
                                     </tr>
                                 @endforeach
@@ -170,7 +170,6 @@
         <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
             <div>
                 <h2 class="text-base font-semibold text-slate-900">Laporan Harian Menunggu Approval</h2>
-                <p class="text-xs text-slate-500">Laporan harian teller yang memerlukan verifikasi supervisor.</p>
             </div>
             <a href="{{ route('supervisor.reports', ['status' => 'draft']) }}" class="text-xs font-medium text-blue-600 hover:text-blue-700">Lihat Semua Laporan</a>
         </div>
@@ -264,7 +263,7 @@
                                 {{ $journal->transaction?->teller?->name ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-3.5">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-medium bg-slate-100 text-slate-700">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
                                     {{ $journal->account_code }}
                                 </span>
                             </td>

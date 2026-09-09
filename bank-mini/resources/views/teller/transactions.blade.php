@@ -61,7 +61,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($transactions as $trx)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-3.5 text-xs text-slate-500 whitespace-nowrap">
+                            <td class="px-6 py-3.5 text-sm text-slate-500 whitespace-nowrap">
                                 {{ $trx->created_at ? $trx->created_at->format('d/m/Y H:i') : '-' }}
                             </td>
                             <td class="px-6 py-3.5 font-medium text-slate-900">
@@ -71,21 +71,21 @@
                                 <span class="font-semibold text-slate-900 block">{{ $trx->bankAccount?->customer?->name ?? 'N/A' }}</span>
                                 <span class="text-xs text-slate-500 block">NIS: {{ $trx->bankAccount?->customer?->nis ?? '-' }}</span>
                             </td>
-                            <td class="px-6 py-3.5 text-xs font-semibold text-slate-700">
+                            <td class="px-6 py-3.5 text-sm font-medium text-slate-900">
                                 {{ $trx->bankAccount?->account_number ?? '-' }}
                             </td>
                             <td class="px-6 py-3.5 capitalize">
                                 @if($trx->type === 'deposit')
-                                    <span class="px-2.5 py-0.5 text-xs font-semibold rounded bg-blue-50 text-blue-700">
+                                    <span class="px-2.5 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">
                                         + Setoran
                                     </span>
                                 @else
-                                    <span class="px-2.5 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">
+                                    <span class="px-2.5 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">
                                         - Penarikan
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-3.5 text-right font-semibold text-slate-900 whitespace-nowrap">
+                            <td class="px-6 py-3.5 text-right font-medium text-slate-900 whitespace-nowrap">
                                 Rp {{ number_format($trx->amount, 0, ',', '.') }}
                             </td>
                             <td class="px-6 py-3.5 text-center whitespace-nowrap">

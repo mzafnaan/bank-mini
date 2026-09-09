@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::unprepared("
             DROP PROCEDURE IF EXISTS `add_balance`;
             CREATE PROCEDURE `add_balance` (IN `p_account_id` BIGINT, IN `p_amount` DECIMAL(15,2))
@@ -43,6 +47,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::unprepared("
             DROP PROCEDURE IF EXISTS `add_balance`;
             DROP PROCEDURE IF EXISTS `count_customers`;

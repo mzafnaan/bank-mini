@@ -133,6 +133,20 @@ class AdminController extends Controller
         return view('admin.accounts', compact('accounts', 'search'));
     }
 
+    public function toggleAccountStatus(BankAccount $bankAccount): RedirectResponse
+    {
+        if (auth()->user()?->role !== 'administrator') {
+            abort(403, 'Hanya Administrator yang dapat mengubah status rekening.');
+        }
+
+        $this->bankAccountService->toggleStatus($bankAccount);
+
+        $statusText = $bankAccount->status === 'active' ? 'diaktifkan' : 'dinonaktifkan';
+
+        return redirect()->route('admin.accounts')
+            ->with('success', "Rekening nasabah {$bankAccount->account_number} berhasil {$statusText}.");
+    }
+
     /**
      * Accounting Audit.
      */

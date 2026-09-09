@@ -5,7 +5,7 @@
 @section('content')
     <div class="mb-6">
         <h1 class="text-2xl font-bold text-slate-900">Audit Jurnal Akuntansi</h1>
-        <p class="text-sm text-slate-500">Pencatatan pembukuan ganda (double-entry bookkeeping) seluruh transaksi keuangan sistem.</p>
+        <p class="text-sm text-slate-500">Pencatatan pembukuan ganda seluruh transaksi keuangan sistem.</p>
     </div>
 
     @if(request('search'))
@@ -33,17 +33,17 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($journals as $journal)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-4 text-xs text-slate-500 whitespace-nowrap">
+                            <td class="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
                                 {{ $journal->created_at ? $journal->created_at->format('d/m/Y H:i:s') : '-' }}
                             </td>
-                            <td class="px-6 py-4 font-mono font-medium text-slate-900">
+                            <td class="px-6 py-4 font-medium text-slate-900">
                                 #{{ $journal->transaction_id }}
                             </td>
                             <td class="px-6 py-4">
-                                <div class="font-semibold text-slate-900">
+                                <div class="font-medium text-slate-900">
                                     {{ $journal->transaction?->bankAccount?->customer?->name ?? 'N/A' }}
                                 </div>
-                                <div class="text-xs text-blue-600 font-mono">
+                                <div class="text-xs text-slate-500">
                                     {{ $journal->transaction?->bankAccount?->account_number ?? '-' }}
                                 </div>
                             </td>
@@ -51,7 +51,7 @@
                                 {{ $journal->transaction?->teller?->name ?? 'System' }}
                             </td>
                             <td class="px-6 py-4">
-                                <span class="px-2.5 py-1 text-xs font-mono font-semibold rounded bg-slate-100 text-slate-800">
+                                <span class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-800">
                                     {{ $journal->account_code }}
                                 </span>
                             </td>
@@ -62,7 +62,7 @@
                                     <span class="px-2.5 py-1 text-xs font-medium rounded bg-slate-100 text-slate-700">KREDIT</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-right font-bold text-slate-900">
+                            <td class="px-6 py-4 text-right font-medium text-slate-900">
                                 Rp {{ number_format($journal->amount, 0, ',', '.') }}
                             </td>
                         </tr>

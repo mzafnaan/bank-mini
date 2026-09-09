@@ -14,26 +14,17 @@ class AuthController extends Controller
     public function __construct(
         protected AuthService $authService
     ) {}
-
-    /**
-     * Display the login view.
-     */
     public function showLoginForm(): View|RedirectResponse
     {
         if (auth()->guard('web')->check()) {
             return $this->redirectBasedOnRole(auth()->guard('web')->user()->role);
         }
-
         if (auth()->guard('customer_web')->check()) {
             return redirect()->route('customer.dashboard');
         }
-
         return view('auth.login');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function login(LoginRequest $request): RedirectResponse
     {
         try {
@@ -52,9 +43,6 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function logout(): RedirectResponse
     {
         $this->authService->logoutWeb();
@@ -62,9 +50,6 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Anda telah berhasil keluar.');
     }
 
-    /**
-     * Redirect user based on staff role.
-     */
     protected function redirectBasedOnRole(string $role): RedirectResponse
     {
         return match ($role) {

@@ -17,6 +17,7 @@ class StoreCustomerRequest extends FormRequest
             'nis' => ['required', 'string', 'max:20', 'unique:customers,nis'],
             'name' => ['required', 'string', 'max:100'],
             'class' => ['required', 'string', 'max:20'],
+            'major' => ['nullable', 'string', 'in:AK,BR,BD,MP,DKV,RPL,TKJ'],
             'phone' => ['nullable', 'string', 'max:20'],
         ];
     }

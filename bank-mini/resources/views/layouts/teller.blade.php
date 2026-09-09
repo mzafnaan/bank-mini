@@ -132,10 +132,6 @@
                     </button>
                 </form>
             </div>
-            <div class="text-xs text-slate-500 flex items-center gap-2 flex-shrink-0">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full"></span>
-                <span>Teller Mode</span>
-            </div>
         </header>
 
         <!-- Flash Messages -->

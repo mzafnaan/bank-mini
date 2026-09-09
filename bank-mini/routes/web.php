@@ -27,8 +27,9 @@ Route::middleware(['auth:web', 'role:administrator'])->prefix('admin')->name('ad
     Route::post('/customers', [AdminController::class, 'storeCustomer'])->name('customers.store');
     Route::put('/customers/{customer}', [AdminController::class, 'updateCustomer'])->name('customers.update');
 
-    // Bank Account Management (Read-only list & details)
+    // Bank Account Management
     Route::get('/accounts', [AdminController::class, 'accounts'])->name('accounts');
+    Route::patch('/accounts/{bankAccount}/status', [AdminController::class, 'toggleAccountStatus'])->name('accounts.toggle-status');
 
     // Accounting Audit
     Route::get('/journals', [AdminController::class, 'journals'])->name('journals');

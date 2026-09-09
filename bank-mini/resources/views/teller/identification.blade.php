@@ -61,17 +61,19 @@
                 <div>
                     <div class="flex items-start justify-between border-b border-slate-100 pb-4 mb-4">
                         <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-blue-50 text-blue-600 font-bold text-lg rounded-md flex items-center justify-center border border-blue-200">
-                                {{ strtoupper(substr($account->customer?->name ?? 'N', 0, 2)) }}
+                            <div class="w-12 h-12 bg-slate-100 text-slate-700 font-bold text-lg rounded-md flex items-center justify-center border border-slate-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                    <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 4a3.25 3.25 0 1 1 0 6.5A3.25 3.25 0 0 1 12 6Zm0 13a7 7 0 0 1-5.45-2.6 6.2 6.2 0 0 1 10.9 0A7 7 0 0 1 12 19Z"/>
+                                </svg>
                             </div>
                             <div>
                                 <h2 class="text-lg font-bold text-slate-900">{{ $account->customer?->name }}</h2>
                                 <div class="text-xs text-slate-500 mt-0.5">
-                                    NIS: <strong class="text-slate-700">{{ $account->customer?->nis }}</strong> • Kelas: <strong class="text-slate-700">{{ $account->customer?->class }}</strong>
+                                    NIS: <strong class="text-slate-700">{{ $account->customer?->nis }}</strong>   Kelas: <strong class="text-slate-700">{{ $account->customer?->class }}</strong>
                                 </div>
                             </div>
                         </div>
-                        <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-xs font-semibold rounded">
+                        <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded">
                             Rekening Aktif
                         </span>
                     </div>
@@ -79,10 +81,17 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                         <div class="p-4 bg-slate-50 rounded-md border border-slate-200">
                             <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Nomor Rekening</span>
-                            <span class="text-base font-mono font-bold text-slate-900 block mt-1">{{ $account->account_number }}</span>
+                            <div class="flex items-center gap-2 mt-1">
+                                <span class="text-base font-bold text-slate-900">{{ $account->account_number }}</span>
+                                @if($account->status === 'active')
+                                    <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded bg-emerald-50 text-emerald-700 border border-emerald-200">Aktif</span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded bg-rose-50 text-rose-700 border border-rose-200">Nonaktif</span>
+                                @endif
+                            </div>
                         </div>
-                        <div class="p-4 bg-blue-50/60 rounded-md border border-blue-200">
-                            <span class="text-xs font-semibold text-blue-800 uppercase tracking-wider block">Saldo Saat Ini</span>
+                        <div class="p-4 bg-slate-50 rounded-md border border-slate-200">
+                            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Saldo Saat Ini</span>
                             <span class="text-xl font-bold text-blue-600 block mt-1">Rp {{ number_format($account->balance, 0, ',', '.') }}</span>
                         </div>
                     </div>
@@ -105,10 +114,10 @@
                 <div class="w-36 h-36 bg-slate-50 p-3 rounded-lg border border-slate-200 flex flex-col items-center justify-center text-slate-800 shadow-inner mb-3">
                     <div class="w-full h-full border border-dashed border-blue-400 rounded flex flex-col items-center justify-center p-2 bg-white">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-blue-600 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
-                        <span class="text-[10px] font-mono text-slate-600 truncate w-full">{{ $account->qr_code }}</span>
+                        <span class="text-[10px] text-slate-600 truncate w-full">{{ $account->qr_code }}</span>
                     </div>
                 </div>
-                <span class="text-xs font-mono font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded border border-slate-200">
+                <span class="text-xs font-semibold text-slate-700 bg-slate-100 px-3 py-1 rounded border border-slate-200">
                     {{ $account->account_number }}
                 </span>
             </div>
@@ -132,15 +141,15 @@
                     <tbody class="divide-y divide-slate-100">
                         @forelse($account->transactions as $trx)
                             <tr class="hover:bg-slate-50 transition">
-                                <td class="px-6 py-3 text-xs text-slate-500 font-mono">{{ $trx->created_at ? $trx->created_at->format('d/m/Y H:i') : '-' }}</td>
-                                <td class="px-6 py-3">
+                                <td class="px-6 py-3.5 text-sm text-slate-500">{{ $trx->created_at ? $trx->created_at->format('d/m/Y H:i') : '-' }}</td>
+                                <td class="px-6 py-3.5">
                                     @if($trx->type === 'deposit')
-                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-blue-50 text-blue-700">+ Setoran</span>
+                                        <span class="px-2.5 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">+ Setoran</span>
                                     @else
-                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-slate-100 text-slate-700">- Penarikan</span>
+                                        <span class="px-2.5 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">- Penarikan</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-3 text-right font-semibold text-slate-900">Rp {{ number_format($trx->amount, 0, ',', '.') }}</td>
+                                <td class="px-6 py-3.5 text-right font-medium text-slate-900">Rp {{ number_format($trx->amount, 0, ',', '.') }}</td>
                             </tr>
                         @empty
                             <tr>
@@ -163,7 +172,7 @@
         </div>
     @endif
 
-    <!-- QR Code Scanner Script -->
+    <!-- QR Code Scanner -->
     <script>
         let html5Qrcode = null;
         let isCameraActive = false;
@@ -189,7 +198,6 @@
             const config = {
                 fps: 30,
                 qrbox: function(viewfinderWidth, viewfinderHeight) {
-                    // Use 80% of the viewfinder for larger scan area
                     let size = Math.min(viewfinderWidth, viewfinderHeight) * 0.8;
                     return { width: Math.floor(size), height: Math.floor(size) };
                 },
@@ -213,7 +221,6 @@
                 onScanSuccess,
                 onScanFailure
             ).catch(err => {
-                // Fallback: try user-facing camera if environment fails
                 console.warn("Environment camera failed, trying user camera:", err);
                 html5Qrcode.start(
                     { facingMode: "user" },
@@ -246,14 +253,11 @@
         function onScanSuccess(decodedText, decodedResult) {
             console.log(`Scan successful: ${decodedText}`, decodedResult);
             document.getElementById('search').value = decodedText;
-
-            // Auto-submit after successful scan
             stopCameraScanner();
             document.getElementById('identification-form').submit();
         }
 
         function onScanFailure(error) {
-            // Quietly ignore scan frame failures while scanning
         }
     </script>
 @endsection

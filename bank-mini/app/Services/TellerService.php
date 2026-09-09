@@ -105,6 +105,10 @@ class TellerService
             throw new Exception("Rekening dengan nomor {$accountNumber} tidak ditemukan.");
         }
 
+        if ($bankAccount->status === 'inactive') {
+            throw new Exception('Rekening nasabah sedang tidak aktif dan tidak dapat digunakan untuk transaksi.');
+        }
+
         return DB::transaction(function () use ($bankAccount, $tellerId, $amount) {
             // 1. Update bank account balance
             $bankAccount->increment('balance', $amount);
@@ -151,6 +155,10 @@ class TellerService
 
         if (! $bankAccount) {
             throw new Exception("Rekening dengan nomor {$accountNumber} tidak ditemukan.");
+        }
+
+        if ($bankAccount->status === 'inactive') {
+            throw new Exception('Rekening nasabah sedang tidak aktif dan tidak dapat digunakan untuk transaksi.');
         }
 
         $customerAccount = $bankAccount->customer?->customerAccount;
@@ -220,6 +228,10 @@ class TellerService
     public function createWithdrawalRequest(int $tellerId, string $accountNumber, float|int $amount): WithdrawalRequest
     {
         $bankAccount = BankAccount::where('account_number', $accountNumber)->firstOrFail();
+
+        if ($bankAccount->status === 'inactive') {
+            throw new Exception('Rekening nasabah sedang tidak aktif dan tidak dapat digunakan untuk transaksi.');
+        }
 
         $minimumBalance = 10000;
         if (($bankAccount->balance - $amount) < $minimumBalance) {

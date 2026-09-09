@@ -6,12 +6,12 @@
     <!-- Top Action Bar -->
     <div class="mb-6 flex items-center justify-between no-print">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Bukti Transaksi (Struk)</h1>
-            <p class="text-xs text-slate-500 mt-1">Cetak bukti transaksi fisik untuk Nasabah dan Arsip Bank Mini (BR-035 & BR-047).</p>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Bukti Transaksi</h1>
+            <p class="text-xs text-slate-500 mt-1">Cetak bukti transaksi fisik untuk Nasabah dan Arsip Bank Mini</p>
         </div>
         <div class="flex items-center gap-3">
             <a href="{{ route('teller.dashboard') }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-md transition">
-                &larr; Ke Dashboard
+                Ke Dashboard
             </a>
             <button onclick="window.print()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition flex items-center gap-1.5 flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
@@ -61,7 +61,7 @@
                 <div class="space-y-3 text-xs mb-1">
                     <div class="flex justify-between items-start">
                         <span class="text-slate-400 font-medium w-28 flex-shrink-0">Tanggal</span>
-                        <span class="font-semibold text-slate-800 text-right font-mono">{{ $transaction->created_at ? $transaction->created_at->format('d M Y | H:i:s') : date('d M Y | H:i:s') }}</span>
+                        <span class="font-semibold text-slate-800 text-right">{{ $transaction->created_at ? $transaction->created_at->format('d M Y | H:i:s') : date('d M Y | H:i:s') }}</span>
                     </div>
                     <div class="flex justify-between items-start">
                         <span class="text-slate-400 font-medium w-28 flex-shrink-0">No. Referensi</span>
@@ -84,7 +84,7 @@
                     </div>
                     <div class="flex justify-between items-start">
                         <span class="text-slate-400 font-medium w-28 flex-shrink-0">No. Rekening</span>
-                        <span class="font-bold text-slate-900 text-right font-mono">{{ $transaction->bankAccount?->account_number ?? '-' }}</span>
+                        <span class="font-bold text-slate-900 text-right">{{ $transaction->bankAccount?->account_number ?? '-' }}</span>
                     </div>
                     <div class="flex justify-between items-start">
                         <span class="text-slate-400 font-medium w-28 flex-shrink-0">Jenis Transaksi</span>
@@ -146,7 +146,7 @@
 
                 <!-- Timestamp watermark -->
                 <div class="text-center text-[9px] text-slate-300 pb-4">
-                    {{ now()->format('d/m/Y H:i:s') }} — VALID
+                    {{ now()->format('d/m/Y H:i:s') }}
                 </div>
 
             </div>

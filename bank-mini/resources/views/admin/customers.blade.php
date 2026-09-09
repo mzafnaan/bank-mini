@@ -39,13 +39,13 @@
                 <tbody class="divide-y divide-slate-100">
                     @forelse($customers as $customer)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-4 font-mono text-slate-700 font-semibold">{{ $customer->nis }}</td>
+                            <td class="px-6 py-4 text-slate-700 font-semibold">{{ $customer->nis }}</td>
                             <td class="px-6 py-4 font-semibold text-slate-900">{{ $customer->name }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ $customer->class }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ $customer->phone ?? '-' }}</td>
                             <td class="px-6 py-4">
                                 @if($customer->bankAccount)
-                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-mono font-bold rounded-md bg-blue-50 text-blue-700">
+                                    <span class="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-blue-50 text-blue-700">
                                         {{ $customer->bankAccount->account_number }}
                                     </span>
                                 @else
@@ -107,9 +107,22 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Kelas <span class="text-red-500">*</span></label>
-                            <input type="text" name="class" required placeholder="Contoh: XII RPL 1" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:border-blue-600 focus:outline-none">
+                            <input type="text" id="add_customer_class" name="class" required placeholder="Contoh: XII RPL 1" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:border-blue-600 focus:outline-none">
                         </div>
                         <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">Jurusan</label>
+                            <select name="major" id="add_customer_major" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:border-blue-600 focus:outline-none bg-white">
+                                <option value="">-- Auto-deteksi dari Kelas --</option>
+                                <option value="RPL">RPL - Rekayasa Perangkat Lunak</option>
+                                <option value="TKJ">TKJ - Teknik Komputer dan Jaringan</option>
+                                <option value="DKV">DKV - Desain Komunikasi Visual</option>
+                                <option value="AK">AK - Akuntansi</option>
+                                <option value="MP">MP - Manajemen Perkantoran</option>
+                                <option value="BD">BD - Bisnis Digital</option>
+                                <option value="BR">BR - Bisnis Retail</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
                             <label class="block text-xs font-semibold text-slate-600 mb-1">No. Telepon</label>
                             <input type="text" name="phone" placeholder="08xxxxxxxxxx" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:border-blue-600 focus:outline-none">
                         </div>
@@ -193,6 +206,16 @@
                 }, 1500);
             });
         }
+
+        // Auto-detect jurusan from class input
+        document.getElementById('add_customer_class')?.addEventListener('input', function() {
+            const val = this.value;
+            const match = val.match(/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i);
+            const select = document.getElementById('add_customer_major');
+            if (match && select) {
+                select.value = match[1].toUpperCase();
+            }
+        });
     </script>
 
     <!-- Modal Credentials Nasabah Baru -->
@@ -222,7 +245,7 @@
                         <div class="text-base font-bold text-slate-900 mt-0.5">{{ session('new_customer_credentials')['name'] }}</div>
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mt-3">Nomor Rekening</div>
                         <div class="mt-1">
-                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-mono font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
                                 {{ session('new_customer_credentials')['account_number'] }}
                             </span>
                         </div>
@@ -235,7 +258,7 @@
                         <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-md border border-slate-200">
                             <div>
                                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Username (NIS)</span>
-                                <span class="text-sm font-mono font-bold text-slate-900 mt-0.5 block" id="cred-username">{{ session('new_customer_credentials')['username'] }}</span>
+                                <span class="text-sm font-bold text-slate-900 mt-0.5 block" id="cred-username">{{ session('new_customer_credentials')['username'] }}</span>
                             </div>
                             <button type="button" onclick="copyCred('cred-username', this)" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition shadow-sm">
                                 Salin
@@ -246,7 +269,7 @@
                         <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-md border border-slate-200">
                             <div>
                                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Password Default</span>
-                                <span class="text-sm font-mono font-bold text-slate-900 mt-0.5 block" id="cred-password">{{ session('new_customer_credentials')['password'] }}</span>
+                                <span class="text-sm font-bold text-slate-900 mt-0.5 block" id="cred-password">{{ session('new_customer_credentials')['password'] }}</span>
                             </div>
                             <button type="button" onclick="copyCred('cred-password', this)" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition shadow-sm">
                                 Salin
@@ -257,7 +280,7 @@
                         <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-md border border-slate-200">
                             <div>
                                 <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">PIN Transaksi (6 Digit)</span>
-                                <span class="text-sm font-mono font-bold text-slate-900 tracking-widest mt-0.5 block" id="cred-pin">{{ session('new_customer_credentials')['pin'] }}</span>
+                                <span class="text-sm font-bold text-slate-900 tracking-widest mt-0.5 block" id="cred-pin">{{ session('new_customer_credentials')['pin'] }}</span>
                             </div>
                             <button type="button" onclick="copyCred('cred-pin', this)" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-md transition shadow-sm">
                                 Salin

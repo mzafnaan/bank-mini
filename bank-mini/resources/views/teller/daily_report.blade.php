@@ -11,7 +11,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <!-- Daily Closing Form & Calculation Card -->
+        <!-- Laporan harian -->
         <div class="lg:col-span-2 space-y-6">
 
             <div class="bg-white rounded-lg border border-slate-200 shadow-sm p-6">
@@ -132,7 +132,7 @@
             if (inputVal === systemVal) {
                 box.className = "p-3.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-md text-xs font-medium flex items-center gap-2";
                 box.innerHTML = `<svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                     <div><strong>Sesuai (Match)!</strong> Uang fisik cocok dengan perhitungan kas sistem.</div>`;
+                                     <div><strong>Sesuai!</strong> Uang fisik cocok dengan perhitungan kas sistem.</div>`;
                 btn.disabled = false;
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
             } else {
@@ -142,7 +142,7 @@
 
                 box.className = "p-3.5 bg-red-50 text-red-900 border border-red-200 rounded-md text-xs font-medium flex items-center gap-2";
                 box.innerHTML = `<svg class="w-4 h-4 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                     <div><strong>Tidak Sesuai (Selisih: ${diffText})!</strong> Hasil perhitungan uang fisik belum sesuai (BR-050).</div>`;
+                                     <div><strong>Tidak Sesuai (Selisih: ${diffText})!</strong> Hasil perhitungan uang fisik belum sesuai.</div>`;
             }
         }
 

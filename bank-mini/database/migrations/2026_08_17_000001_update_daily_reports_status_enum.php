@@ -10,6 +10,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE daily_reports MODIFY COLUMN status ENUM('draft', 'approved', 'rejected') NOT NULL DEFAULT 'draft'");
     }
 
@@ -18,6 +22,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (DB::getDriverName() !== 'mysql') {
+            return;
+        }
+
         DB::statement("ALTER TABLE daily_reports MODIFY COLUMN status ENUM('draft', 'approved') NOT NULL DEFAULT 'draft'");
     }
 };
