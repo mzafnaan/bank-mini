@@ -16,11 +16,11 @@ Perancangan database menggunakan prinsip berikut:
 
 - Memenuhi Third Normal Form (3NF).
 - Menggunakan Primary Key pada setiap tabel.
-- Menggunakan Foreign Key untuk menjaga relasi antar tabel.
+- Menggunakan Foreign Key untuk menjaga integritas relasi antar tabel.
 - Menggunakan `ON DELETE RESTRICT` pada tabel master agar data transaksi tetap terjaga.
 - Tidak menyimpan data yang redundan.
 - Saldo rekening hanya disimpan pada tabel `bank_accounts`.
-- Seluruh transaksi menjadi sumber utama (source of truth) untuk laporan dan jurnal.
+- Seluruh transaksi menjadi sumber utama (Source of Truth) untuk laporan harian dan jurnal akuntansi.
 
 ---
 
@@ -28,13 +28,13 @@ Perancangan database menggunakan prinsip berikut:
 
 ## 3.1 users
 
-Menyimpan akun pengguna internal sistem.
+Menyimpan akun pengguna internal yang memiliki akses ke sistem.
 
 ### Responsibilities
 
 - Administrator
-- Teller
 - Supervisor
+- Teller
 
 ### Main Attributes
 
@@ -59,8 +59,6 @@ Menyimpan data identitas nasabah.
 - nis
 - name
 - class
-- gender
-- address
 - phone
 - created_at
 - updated_at
@@ -69,7 +67,7 @@ Menyimpan data identitas nasabah.
 
 ## 3.3 bank_accounts
 
-Menyimpan data rekening nasabah.
+Menyimpan informasi rekening milik nasabah.
 
 ### Main Attributes
 
@@ -85,7 +83,7 @@ Menyimpan data rekening nasabah.
 
 ## 3.4 customer_accounts
 
-Menyimpan akun login nasabah.
+Menyimpan akun login nasabah untuk aplikasi mobile.
 
 ### Main Attributes
 
@@ -103,7 +101,7 @@ Menyimpan akun login nasabah.
 
 ## 3.5 transactions
 
-Menyimpan seluruh transaksi keuangan.
+Menyimpan seluruh transaksi yang dilakukan melalui Teller.
 
 ### Main Attributes
 
@@ -123,7 +121,7 @@ Menyimpan seluruh transaksi keuangan.
 
 ## 3.6 withdrawal_requests
 
-Menyimpan permintaan penarikan yang menunggu verifikasi PIN.
+Menyimpan permintaan penarikan saldo yang menunggu verifikasi PIN nasabah.
 
 ### Main Attributes
 
@@ -140,7 +138,7 @@ Menyimpan permintaan penarikan yang menunggu verifikasi PIN.
 
 ## 3.7 journal_entries
 
-Menyimpan jurnal akuntansi yang dihasilkan otomatis dari transaksi.
+Menyimpan jurnal akuntansi yang dihasilkan secara otomatis dari setiap transaksi.
 
 ### Main Attributes
 
@@ -155,7 +153,7 @@ Menyimpan jurnal akuntansi yang dihasilkan otomatis dari transaksi.
 
 ## 3.8 daily_reports
 
-Menyimpan rekap operasional harian Teller.
+Menyimpan laporan operasional harian Teller.
 
 ### Main Attributes
 
@@ -192,7 +190,7 @@ Menyimpan rekap operasional harian Teller.
 
 ## Primary Key
 
-Setiap tabel memiliki Primary Key berupa `id`.
+Seluruh tabel menggunakan Primary Key berupa kolom `id`.
 
 ---
 
@@ -221,13 +219,13 @@ Setiap tabel memiliki Primary Key berupa `id`.
 
 ## Delete Rules
 
-Seluruh relasi master menggunakan
+Seluruh tabel master menggunakan aturan:
 
-```
+```text
 ON DELETE RESTRICT
 ```
 
-untuk menjaga integritas data transaksi.
+untuk menjaga konsistensi data transaksi serta riwayat audit.
 
 ---
 
@@ -235,11 +233,13 @@ untuk menjaga integritas data transaksi.
 
 Seluruh tabel dirancang memenuhi Third Normal Form (3NF):
 
-- Tidak terdapat data yang berulang.
-- Setiap atribut bergantung pada Primary Key.
+- Tidak terdapat data yang redundan.
+- Seluruh atribut bergantung pada Primary Key.
 - Tidak terdapat ketergantungan transitif.
 - Informasi identitas nasabah dipisahkan dari informasi rekening.
-- Informasi akun login dipisahkan dari data nasabah.
+- Informasi akun login nasabah dipisahkan dari data identitas.
+- Informasi transaksi dipisahkan dari jurnal akuntansi.
+- Laporan harian dibentuk dari rekap transaksi operasional.
 
 ---
 
@@ -248,13 +248,13 @@ Seluruh tabel dirancang memenuhi Third Normal Form (3NF):
 | Table | Description |
 |--------|-------------|
 | users | Akun pengguna internal |
-| customers | Data nasabah |
-| bank_accounts | Data rekening |
+| customers | Data identitas nasabah |
+| bank_accounts | Data rekening nasabah |
 | customer_accounts | Akun login nasabah |
-| transactions | Data transaksi |
-| withdrawal_requests | Permintaan penarikan |
+| transactions | Riwayat transaksi |
+| withdrawal_requests | Permintaan penarikan saldo |
 | journal_entries | Jurnal akuntansi |
-| daily_reports | Laporan harian |
+| daily_reports | Laporan operasional harian |
 
 ---
 
@@ -262,14 +262,16 @@ Seluruh tabel dirancang memenuhi Third Normal Form (3NF):
 
 Dokumen ini hanya membahas rancangan basis data.
 
-Dokumen ini tidak membahas:
+Tidak mencakup implementasi teknis seperti:
 
-- SQL Migration
+- Laravel Migration
+- Seeder
+- Model
 - Stored Procedure
 - Trigger
 - Function
 - View
-- API
+- REST API
 - User Interface
 
-Implementasi teknis akan dibahas pada tahap pengembangan sistem.
+Seluruh implementasi teknis akan dijelaskan pada dokumen Architecture Design dan API Design.
