@@ -141,7 +141,7 @@
                                 @foreach($searchResults['journals'] as $j)
                                     <tr class="hover:bg-slate-50 transition">
                                         <td class="px-6 py-3.5 text-sm text-slate-500">{{ $j->created_at ? $j->created_at->format('d/m/Y H:i') : '-' }}</td>
-                                        <td class="px-6 py-3.5 font-medium text-slate-900">#{{ $j->transaction_id }}</td>
+                                        <td class="px-6 py-3.5 font-medium text-slate-900">TRX-{{ str_pad($j->transaction_id, 6, '0', STR_PAD_LEFT) }}</td>
                                         <td class="px-6 py-3.5">{{ $j->transaction?->bankAccount?->customer?->name ?? 'N/A' }}</td>
                                         <td class="px-6 py-3.5"><span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">{{ $j->account_code }}</span></td>
                                         <td class="px-6 py-3.5 text-right font-medium text-slate-900">Rp {{ number_format($j->amount, 0, ',', '.') }}</td>
@@ -213,7 +213,7 @@
                                 {{ $journal->created_at ? $journal->created_at->format('d/m/Y H:i') : '-' }}
                             </td>
                             <td class="px-6 py-3.5 font-medium text-slate-900">
-                                #{{ $journal->transaction_id }}
+                                TRX-{{ str_pad($journal->transaction_id, 6, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-6 py-3.5">
                                 {{ $journal->transaction?->bankAccount?->customer?->name ?? 'N/A' }}

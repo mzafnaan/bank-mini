@@ -34,4 +34,9 @@ class Transaction extends Model
     {
         return $this->hasMany(JournalEntry::class);
     }
+
+    public function getCodeAttribute(): string
+    {
+        return 'TRX-' . str_pad($this->id, 6, '0', STR_PAD_LEFT);
+    }
 }

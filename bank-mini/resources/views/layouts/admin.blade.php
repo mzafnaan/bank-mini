@@ -14,20 +14,31 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex">
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 hidden md:hidden transition-opacity"></div>
+
     <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 left-0 z-30">
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 left-0 z-40 transition-transform duration-200 ease-in-out -translate-x-full md:translate-x-0">
         
         <!-- Brand Header -->
-        <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
-            <div class="w-9 h-9 bg-blue-600 rounded-md flex items-center justify-center text-white flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-blue-600 rounded-md flex items-center justify-center text-white flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-bold text-slate-900 text-base leading-tight block">Bank Mini</span>
+                    <span class="text-xs text-slate-500 block">Admin Panel</span>
+                </div>
+            </div>
+            <!-- Mobile Close Button -->
+            <button onclick="toggleSidebar(false)" type="button" class="md:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition" aria-label="Tutup Menu">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-            </div>
-            <div>
-                <span class="font-bold text-slate-900 text-base leading-tight block">Bank Mini</span>
-                <span class="text-xs text-slate-500 block">Admin Panel</span>
-            </div>
+            </button>
         </div>
 
         <!-- Navigation Links -->
@@ -97,11 +108,18 @@
     </aside>
 
     <!-- Main Content Area -->
-    <div class="flex-1 pl-64 flex flex-col min-h-screen">
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen w-full min-w-0">
         
         <!-- Top Banner / Header space -->
-        <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-20 gap-4">
-            <div class="flex items-center gap-4 flex-1 max-w-xl">
+        <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 gap-3">
+            <div class="flex items-center gap-2 sm:gap-4 flex-1 max-w-xl">
+                <!-- Mobile Burger Menu Button -->
+                <button onclick="toggleSidebar(true)" type="button" class="md:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition focus:outline-none flex-shrink-0" aria-label="Buka Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
                 <form action="{{ request()->url() }}" method="GET" class="relative w-full flex items-center gap-2">
                     <div class="relative flex-1">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIS, Nama, Rekening, User... (Tekan Enter)"
@@ -121,7 +139,7 @@
         </header>
 
         <!-- Flash Messages -->
-        <div class="px-8 mt-6 w-full">
+        <div class="px-4 sm:px-6 lg:px-8 mt-6 w-full">
             @if(session('success'))
                 <div class="p-3.5 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-md mb-4 flex items-center justify-between">
                     <span>{{ session('success') }}</span>
@@ -146,16 +164,32 @@
         </div>
 
         <!-- Content Body -->
-        <main class="px-8 py-4 flex-1">
+        <main class="px-4 sm:px-6 lg:px-8 py-4 flex-1">
             @yield('content')
         </main>
 
         <!-- Footer -->
-        <footer class="bg-white border-t border-slate-200 py-4 px-8 text-center text-xs text-slate-500 mt-auto">
+        <footer class="bg-white border-t border-slate-200 py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 mt-auto">
             &copy; {{ date('Y') }} Bank Mini Sekolah Administrator Panel.
         </footer>
 
     </div>
 
+    <!-- Mobile Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar(open) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (open) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden', 'md:overflow-auto');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden', 'md:overflow-auto');
+            }
+        }
+    </script>
 </body>
 </html>

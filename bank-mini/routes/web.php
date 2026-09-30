@@ -74,7 +74,18 @@ Route::middleware(['auth:web', 'role:supervisor'])->prefix('supervisor')->name('
     Route::get('/journals', [SupervisorController::class, 'journals'])->name('journals');
 });
 
-Route::middleware(['auth:customer_web', 'role:customer'])->get('/customer/dashboard', function () {
-    return 'Dashboard Customer - ' . auth()->user()->username;
-})->name('customer.dashboard');
+use App\Http\Controllers\Web\CustomerController;
 
+// Customer / Nasabah Routes
+Route::middleware(['auth:web,customer_web', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
+    Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
+    Route::get('/transactions', [CustomerController::class, 'transactions'])->name('transactions');
+    Route::get('/qr-code', [CustomerController::class, 'qrCode'])->name('qr-code');
+    Route::get('/security', [CustomerController::class, 'security'])->name('security');
+    Route::post('/security/password', [CustomerController::class, 'updatePassword'])->name('security.password');
+    Route::post('/security/pin', [CustomerController::class, 'updatePin'])->name('security.pin');
+
+    // Withdrawal Authorization & Rejection (BR-039, BR-040, DD-006)
+    Route::post('/withdrawal-requests/{withdrawalRequest}/authorize', [CustomerController::class, 'authorizeWithdrawal'])->name('withdrawal.authorize');
+    Route::post('/withdrawal-requests/{withdrawalRequest}/reject', [CustomerController::class, 'rejectWithdrawal'])->name('withdrawal.reject');
+});

@@ -14,20 +14,31 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex">
 
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div id="sidebarBackdrop" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-30 hidden md:hidden transition-opacity"></div>
+
     <!-- Sidebar Navigation -->
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 left-0 z-30">
+    <aside id="sidebar" class="w-64 bg-white border-r border-slate-200 flex flex-col fixed inset-y-0 left-0 z-40 transition-transform duration-200 ease-in-out -translate-x-full md:translate-x-0">
         
         <!-- Brand Header -->
-        <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100">
-            <div class="w-9 h-9 bg-blue-600 rounded-md flex items-center justify-center text-white flex-shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-blue-600 rounded-md flex items-center justify-center text-white flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <div>
+                    <span class="font-bold text-slate-900 text-base leading-tight block">Bank Mini</span>
+                    <span class="text-xs text-slate-500 block">Supervisor Panel</span>
+                </div>
+            </div>
+            <!-- Mobile Close Button -->
+            <button onclick="toggleSidebar(false)" type="button" class="md:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition" aria-label="Tutup Menu">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
-            </div>
-            <div>
-                <span class="font-bold text-slate-900 text-base leading-tight block">Bank Mini</span>
-                <span class="text-xs text-slate-500 block">Supervisor Panel</span>
-            </div>
+            </button>
         </div>
 
         <!-- Navigation Links -->
@@ -81,11 +92,18 @@
     </aside>
 
     <!-- Main Content Area -->
-    <div class="flex-1 pl-64 flex flex-col min-h-screen">
+    <div class="flex-1 md:pl-64 flex flex-col min-h-screen w-full min-w-0">
         
         <!-- Top Banner / Header space -->
-        <header class="h-16 bg-white border-b border-slate-200 px-8 flex items-center justify-between sticky top-0 z-20 gap-4">
-            <div class="flex items-center gap-4 flex-1 max-w-xl">
+        <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 gap-3">
+            <div class="flex items-center gap-2 sm:gap-4 flex-1 max-w-xl">
+                <!-- Mobile Burger Menu Button -->
+                <button onclick="toggleSidebar(true)" type="button" class="md:hidden p-2 -ml-1 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-md transition focus:outline-none flex-shrink-0" aria-label="Buka Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                </button>
+
                 <form action="{{ request()->url() }}" method="GET" class="relative w-full flex items-center gap-2">
                     <div class="relative flex-1">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari tanggal, nama teller, transaksi... (Tekan Enter)"
@@ -105,7 +123,7 @@
         </header>
 
         <!-- Flash Messages -->
-        <div class="px-8 mt-6 w-full">
+        <div class="px-4 sm:px-6 lg:px-8 mt-6 w-full">
             @if(session('success'))
                 <div class="p-3.5 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-md mb-4 flex items-center justify-between">
                     <span>{{ session('success') }}</span>
@@ -130,16 +148,32 @@
         </div>
 
         <!-- Content Body -->
-        <main class="px-8 py-4 flex-1">
+        <main class="px-4 sm:px-6 lg:px-8 py-4 flex-1">
             @yield('content')
         </main>
 
         <!-- Footer -->
-        <footer class="bg-white border-t border-slate-200 py-4 px-8 text-center text-xs text-slate-500 mt-auto">
+        <footer class="bg-white border-t border-slate-200 py-4 px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 mt-auto">
             &copy; {{ date('Y') }} Bank Mini Sekolah Supervisor Panel.
         </footer>
 
     </div>
 
+    <!-- Mobile Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar(open) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (open) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden', 'md:overflow-auto');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden', 'md:overflow-auto');
+            }
+        }
+    </script>
 </body>
 </html>

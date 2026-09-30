@@ -37,7 +37,7 @@
                                 {{ $journal->created_at ? $journal->created_at->format('d/m/Y H:i:s') : '-' }}
                             </td>
                             <td class="px-6 py-4 font-medium text-slate-900">
-                                #{{ $journal->transaction_id }}
+                                TRX-{{ str_pad($journal->transaction_id, 6, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-6 py-4">
                                 <div class="font-semibold text-slate-900">

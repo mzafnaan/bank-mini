@@ -23,4 +23,9 @@ class JournalEntry extends Model
     {
         return $this->belongsTo(Transaction::class);
     }
+
+    public function getTransactionCodeAttribute(): string
+    {
+        return 'TRX-' . str_pad($this->transaction_id, 6, '0', STR_PAD_LEFT);
+    }
 }

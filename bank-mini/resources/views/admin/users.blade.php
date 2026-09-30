@@ -57,13 +57,19 @@
                                     Edit
                                 </button>
                                 
-                                <form action="{{ route('admin.users.toggle-status', $user->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 rounded hover:bg-slate-200 transition">
-                                        {{ $user->status === 'active' ? 'Nonaktifkan' : 'Aktifkan' }}
+                                @if($user->status === 'active')
+                                    <button type="button"
+                                        onclick="confirmToggleStatus('{{ $user->id }}', '{{ addslashes($user->name) }}', '{{ $user->role }}', 'inactive')"
+                                        class="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 rounded hover:bg-slate-200 transition">
+                                        Nonaktifkan
                                     </button>
-                                </form>
+                                @else
+                                    <button type="button"
+                                        onclick="confirmToggleStatus('{{ $user->id }}', '{{ addslashes($user->name) }}', '{{ $user->role }}', 'active')"
+                                        class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition">
+                                        Aktifkan
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -76,8 +82,31 @@
         </div>
     </div>
 
+    <!-- Modal Konfirmasi Status Pengguna -->
+    <div id="modalConfirmStatus" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="confirm_modal_title" class="text-lg font-bold text-slate-900">Konfirmasi Status Pengguna</h3>
+                <button onclick="closeConfirmModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+            </div>
+
+            <p id="confirm_modal_message" class="text-sm text-slate-600 mb-6 leading-relaxed"></p>
+
+            <form id="formConfirmStatus" method="POST" class="flex justify-end gap-2">
+                @csrf
+                @method('PATCH')
+                <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-md transition">
+                    Batal
+                </button>
+                <button type="submit" id="confirm_modal_btn" class="px-4 py-2 font-medium text-sm rounded-md transition">
+                    Konfirmasi
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Add User -->
-    <div id="modalAddUser" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center hidden z-50 p-4">
+    <div id="modalAddUser" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
         <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-slate-900">Tambah Pengguna Internal</h3>
@@ -121,7 +150,7 @@
     </div>
 
     <!-- Modal Edit User -->
-    <div id="modalEditUser" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center hidden z-50 p-4">
+    <div id="modalEditUser" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
         <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-bold text-slate-900">Edit Pengguna Internal</h3>
@@ -166,13 +195,52 @@
     </div>
 
     <script>
+        let initialUserStatus = '';
+
         function editUser(user) {
             document.getElementById('formEditUser').action = '/admin/users/' + user.id;
             document.getElementById('edit_name').value = user.name;
             document.getElementById('edit_username').value = user.username;
             document.getElementById('edit_role').value = user.role;
             document.getElementById('edit_status').value = user.status;
+            initialUserStatus = user.status;
             document.getElementById('modalEditUser').classList.remove('hidden');
+        }
+
+        document.getElementById('formEditUser').addEventListener('submit', function(e) {
+            const status = document.getElementById('edit_status').value;
+            if (status === 'inactive' && initialUserStatus === 'active') {
+                if (!confirm('Apakah Anda yakin ingin mengubah status pengguna ini menjadi Nonaktif?')) {
+                    e.preventDefault();
+                }
+            }
+        });
+
+        function confirmToggleStatus(userId, userName, role, targetAction) {
+            const form = document.getElementById('formConfirmStatus');
+            form.action = '/admin/users/' + userId + '/status';
+
+            const title = document.getElementById('confirm_modal_title');
+            const msg = document.getElementById('confirm_modal_message');
+            const btn = document.getElementById('confirm_modal_btn');
+
+            if (targetAction === 'inactive') {
+                title.innerText = 'Nonaktifkan Pengguna';
+                msg.innerHTML = 'Apakah Anda yakin ingin menonaktifkan pengguna <strong>' + userName + '</strong> (Role: <span class="capitalize">' + role + '</span>)?<br><br><span class="text-xs text-slate-500">Catatan: Pengguna yang dinonaktifkan tidak akan dapat masuk ke dalam sistem.</span>';
+                btn.innerText = 'Ya, Nonaktifkan';
+                btn.className = 'px-4 py-2 font-medium text-sm rounded-md text-white bg-red-600 hover:bg-red-700 transition shadow-sm';
+            } else {
+                title.innerText = 'Aktifkan Pengguna';
+                msg.innerHTML = 'Apakah Anda yakin ingin mengaktifkan kembali pengguna <strong>' + userName + '</strong> (Role: <span class="capitalize">' + role + '</span>)?<br><br><span class="text-xs text-slate-500">Catatan: Pengguna akan dapat masuk kembali ke dalam sistem sesuai hak aksesnya.</span>';
+                btn.innerText = 'Ya, Aktifkan';
+                btn.className = 'px-4 py-2 font-medium text-sm rounded-md text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm';
+            }
+
+            document.getElementById('modalConfirmStatus').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('modalConfirmStatus').classList.add('hidden');
         }
     </script>
 @endsection

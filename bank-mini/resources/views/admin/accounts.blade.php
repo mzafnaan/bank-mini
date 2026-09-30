@@ -31,7 +31,8 @@
 
     <!-- Accounts Table Card -->
     <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
-        <table class="w-full text-left text-sm text-slate-600">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-slate-600">
             <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                 <tr>
                     <th class="px-6 py-3">No. Rekening</th>
@@ -92,10 +93,11 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <!-- Modal Konfirmasi Status Rekening -->
-    <div id="modalConfirmStatus" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center hidden z-50 p-4">
+    <div id="modalConfirmStatus" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
         <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 id="confirm_modal_title" class="text-lg font-bold text-slate-900">Konfirmasi Status Rekening</h3>
@@ -118,7 +120,7 @@
     </div>
 
     <!-- Modal Detail Rekening & QR Code -->
-    <div id="modalAccountDetail" class="fixed inset-0 bg-slate-900/50 flex items-center justify-center hidden z-50 p-4">
+    <div id="modalAccountDetail" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
         <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full p-6">
             <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
                 <h3 class="text-lg font-bold text-slate-900">Detail Rekening Nasabah</h3>

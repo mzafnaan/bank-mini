@@ -114,7 +114,7 @@
                             {{ $trx->created_at ? $trx->created_at->format('H:i:s') : '-' }}
                         </td>
                         <td class="px-6 py-4 font-medium text-slate-900">
-                            #{{ $trx->id }}
+                            TRX-{{ str_pad($trx->id, 6, '0', STR_PAD_LEFT) }}
                         </td>
                         <td class="px-6 py-4 font-medium text-slate-900">
                             {{ $trx->bankAccount?->account_number ?? '-' }}

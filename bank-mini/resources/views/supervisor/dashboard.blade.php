@@ -71,16 +71,14 @@
                                             @endif
                                         </td>
                                         <td class="px-6 py-3.5 text-center">
-                                            @if($report->status === 'draft')
-                                                <form action="{{ route('supervisor.reports.approve', $report) }}" method="POST" class="inline">
-                                                    @csrf
-                                                    <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md shadow-sm transition">
-                                                        Setujui
-                                                    </button>
-                                                </form>
-                                            @else
-                                                <span class="text-xs text-slate-400 font-medium">Selesai</span>
-                                            @endif
+                                            <a href="{{ route('supervisor.reports.show', $report) }}"
+                                               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md transition">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                Detail
+                                            </a>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -118,7 +116,7 @@
                                 @foreach($searchResults['journals'] as $j)
                                     <tr class="hover:bg-slate-50 transition">
                                         <td class="px-6 py-3 text-xs text-slate-500">{{ $j->created_at ? $j->created_at->format('d/m/Y H:i') : '-' }}</td>
-                                        <td class="px-6 py-3 font-medium text-slate-900">#{{ $j->transaction_id }}</td>
+                                        <td class="px-6 py-3 font-medium text-slate-900">TRX-{{ str_pad($j->transaction_id, 6, '0', STR_PAD_LEFT) }}</td>
                                         <td class="px-6 py-3">{{ $j->transaction?->bankAccount?->customer?->name ?? 'N/A' }}</td>
                                         <td class="px-6 py-3"><span class="px-2 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">{{ $j->account_code }}</span></td>
                                         <td class="px-6 py-3 text-right font-medium text-slate-900">Rp {{ number_format($j->amount, 0, ',', '.') }}</td>
@@ -208,12 +206,14 @@
                                 Rp {{ number_format($report->closing_cash, 0, ',', '.') }}
                             </td>
                             <td class="px-6 py-3.5 text-center">
-                                <form action="{{ route('supervisor.reports.approve', $report) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md shadow-sm transition">
-                                        Setujui Laporan
-                                    </button>
-                                </form>
+                                <a href="{{ route('supervisor.reports.show', $report) }}"
+                                   class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-md transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Detail
+                                </a>
                             </td>
                         </tr>
                     @empty
@@ -254,7 +254,7 @@
                                 {{ $journal->created_at ? $journal->created_at->format('d/m/Y H:i') : '-' }}
                             </td>
                             <td class="px-6 py-3.5 font-medium text-slate-900">
-                                #{{ $journal->transaction_id }}
+                                TRX-{{ str_pad($journal->transaction_id, 6, '0', STR_PAD_LEFT) }}
                             </td>
                             <td class="px-6 py-3.5 font-medium text-slate-800">
                                 {{ $journal->transaction?->bankAccount?->customer?->name ?? 'N/A' }}

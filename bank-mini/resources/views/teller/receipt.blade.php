@@ -6,10 +6,10 @@
     <!-- Top Action Bar -->
     <div class="mb-6 flex items-center justify-between no-print">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Bukti Transaksi</h1>
-            <p class="text-xs text-slate-500 mt-1">Cetak bukti transaksi fisik untuk Nasabah dan Arsip Bank Mini</p>
+            <h1 class="text-2xl font-bold text-slate-900">Bukti Transaksi</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Cetak bukti transaksi fisik untuk Nasabah dan Arsip Bank Mini</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
             <a href="{{ route('teller.dashboard') }}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-md transition">
                 Ke Dashboard
             </a>
@@ -20,156 +20,120 @@
         </div>
     </div>
 
-    <!-- Realistic Receipt Container -->
+    <!-- Clean Receipt Card -->
     <div class="flex justify-center">
-        <div class="w-[340px] print-container print:shadow-none print:border-none print:p-0">
-
-            <!-- Receipt Top Zigzag Edge -->
-            <div class="w-full overflow-hidden no-print" style="height: 16px;">
-                <svg width="100%" height="16" viewBox="0 0 340 16" preserveAspectRatio="none">
-                    <defs>
-                        <pattern id="zigzag-top" x="0" y="0" width="20" height="16" patternUnits="userSpaceOnUse">
-                            <polygon points="0,16 10,0 20,16" fill="white"/>
-                        </pattern>
-                    </defs>
-                    <rect width="340" height="16" fill="url(#zigzag-top)"/>
-                </svg>
-            </div>
+        <div class="w-[350px] print-container print:shadow-none print:border-none print:p-0">
 
             <!-- Receipt Body -->
-            <div class="bg-white px-7 pt-6 pb-2 shadow-lg print:shadow-none" style="box-shadow: 0 4px 24px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05);">
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 print:border-none print:shadow-none print:p-0">
 
                 <!-- Success Icon -->
-                <div class="flex justify-center mb-4">
-                    <div class="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-md" style="box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <div class="flex justify-center mb-3">
+                    <div class="w-12 h-12 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                         </svg>
                     </div>
                 </div>
 
                 <!-- Receipt Header -->
-                <div class="text-center mb-5">
-                    <h2 class="text-base font-extrabold text-slate-900 uppercase tracking-widest">Transaksi Berhasil</h2>
-                    <p class="text-[10px] text-slate-400 font-medium mt-1 tracking-wide">BANK MINI SEKOLAH</p>
+                <div class="text-center mb-4">
+                    <h2 class="text-base font-bold text-slate-900 tracking-tight">Transaksi Berhasil</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Bank Mini Sekolah</p>
                 </div>
 
                 <!-- Separator -->
-                <div class="border-t border-dashed border-slate-300 my-4"></div>
+                <div class="border-t border-slate-100 my-3.5"></div>
 
-                <!-- Detail Section 1: Waktu & Referensi -->
-                <div class="space-y-3 text-xs mb-1">
-                    <div class="flex justify-between items-start">
-                        <span class="text-slate-400 font-medium w-28 flex-shrink-0">Tanggal</span>
-                        <span class="font-semibold text-slate-800 text-right">{{ $transaction->created_at ? $transaction->created_at->format('d M Y | H:i:s') : date('d M Y | H:i:s') }}</span>
-                    </div>
-                    <div class="flex justify-between items-start">
-                        <span class="text-slate-400 font-medium w-28 flex-shrink-0">No. Referensi</span>
-                        <span class="font-bold text-slate-900 text-right tracking-wide">TRX-{{ str_pad($transaction->id, 6, '0', STR_PAD_LEFT) }}</span>
-                    </div>
-                </div>
-
-                <!-- Separator -->
-                <div class="border-t border-dashed border-slate-300 my-4"></div>
-
-                <!-- Detail Section 2: Info Nasabah -->
-                <div class="space-y-3 text-xs mb-1">
-                    <div class="flex justify-between items-start">
-                        <span class="text-slate-400 font-medium w-28 flex-shrink-0">Nama Nasabah</span>
-                        <span class="font-bold text-slate-900 text-right">{{ $transaction->bankAccount?->customer?->name ?? 'N/A' }}</span>
-                    </div>
-                    <div class="flex justify-between items-start">
-                        <span class="text-slate-400 font-medium w-28 flex-shrink-0">NIS</span>
-                        <span class="font-semibold text-slate-700 text-right">{{ $transaction->bankAccount?->customer?->nis ?? '-' }}</span>
-                    </div>
-                    <div class="flex justify-between items-start">
-                        <span class="text-slate-400 font-medium w-28 flex-shrink-0">No. Rekening</span>
-                        <span class="font-bold text-slate-900 text-right">{{ $transaction->bankAccount?->account_number ?? '-' }}</span>
-                    </div>
-                    <div class="flex justify-between items-start">
-                        <span class="text-slate-400 font-medium w-28 flex-shrink-0">Jenis Transaksi</span>
-                        <span class="font-extrabold uppercase text-right {{ $transaction->type === 'deposit' ? 'text-blue-600' : 'text-orange-600' }}">
-                            {{ $transaction->type === 'deposit' ? 'Setoran Tunai' : 'Penarikan Tunai' }}
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Separator -->
-                <div class="border-t border-dashed border-slate-300 my-4"></div>
-
-                <!-- Detail Section 3: Nominal -->
-                <div class="space-y-3 text-xs mb-1">
+                <!-- Section: Waktu & Referensi -->
+                <div class="space-y-2.5 text-xs">
                     <div class="flex justify-between items-center">
-                        <span class="text-slate-400 font-medium">Nominal</span>
-                        <span class="text-lg font-extrabold text-slate-900">
-                            Rp{{ number_format($transaction->amount, 0, ',', '.') }}
-                        </span>
+                        <span class="text-slate-400">Tanggal</span>
+                        <span class="font-medium text-slate-700">{{ $transaction->created_at ? $transaction->created_at->format('d M Y | H:i:s') : date('d M Y | H:i:s') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">No. Referensi</span>
+                        <span class="font-semibold text-slate-900">TRX-{{ str_pad($transaction->id, 6, '0', STR_PAD_LEFT) }}</span>
                     </div>
                 </div>
 
                 <!-- Separator -->
-                <div class="border-t border-dashed border-slate-300 my-4"></div>
+                <div class="border-t border-slate-100 my-3.5"></div>
 
-                <!-- Total Section -->
-                <div class="flex justify-between items-center py-3 px-4 bg-slate-50 rounded-lg mb-2">
-                    <span class="text-sm font-bold text-slate-800">Total</span>
-                    <span class="text-xl font-extrabold {{ $transaction->type === 'deposit' ? 'text-blue-600' : 'text-orange-600' }}">
-                        Rp{{ number_format($transaction->amount, 0, ',', '.') }}
-                    </span>
-                </div>
-
-                <!-- Saldo Info -->
-                <div class="flex justify-between items-center text-xs px-1 mt-3 mb-2">
-                    <span class="text-slate-400 font-medium">Saldo Akhir Rekening</span>
-                    <span class="font-extrabold text-slate-900">
-                        Rp{{ number_format($transaction->bankAccount?->balance ?? 0, 0, ',', '.') }}
-                    </span>
+                <!-- Section: Info Nasabah -->
+                <div class="space-y-2.5 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Nama Nasabah</span>
+                        <span class="font-semibold text-slate-900">{{ $transaction->bankAccount?->customer?->name ?? 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">NIS</span>
+                        <span class="text-slate-600">{{ $transaction->bankAccount?->customer?->nis ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">No. Rekening</span>
+                        <span class="font-semibold text-slate-900">{{ $transaction->bankAccount?->account_number ?? '-' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Jenis Transaksi</span>
+                        @if($transaction->type === 'deposit')
+                            <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700">Setoran Tunai</span>
+                        @else
+                            <span class="px-2 py-0.5 text-xs font-medium rounded-md bg-slate-100 text-slate-700">Penarikan Tunai</span>
+                        @endif
+                    </div>
                 </div>
 
                 <!-- Separator -->
-                <div class="border-t border-dashed border-slate-300 my-4"></div>
+                <div class="border-t border-slate-100 my-3.5"></div>
 
-                <!-- Teller Info -->
-                <div class="flex justify-between items-center text-[11px] text-slate-400 mb-4">
-                    <span>Dilayani oleh</span>
-                    <span class="font-semibold text-slate-600">{{ $transaction->teller?->name ?? auth()->user()->name }}</span>
+                <!-- Section: Nominal & Total -->
+                <div class="space-y-2.5 text-xs">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Nominal</span>
+                        <span class="font-semibold text-slate-800">Rp {{ number_format($transaction->amount, 0, ',', '.') }}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center py-2.5 px-3.5 bg-slate-50 border border-slate-100 rounded-lg">
+                        <span class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Total</span>
+                        <span class="text-base font-bold text-slate-900">
+                            Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+                        </span>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-1">
+                        <span class="text-slate-400">Saldo Akhir Rekening</span>
+                        <span class="font-semibold text-slate-800">
+                            Rp {{ number_format($transaction->bankAccount?->balance ?? 0, 0, ',', '.') }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Dilayani oleh</span>
+                        <span class="text-slate-600">{{ $transaction->teller?->name ?? auth()->user()->name }}</span>
+                    </div>
                 </div>
 
-                <!-- Footer Message -->
-                <div class="text-center py-4 mt-1">
-                    <p class="text-[11px] text-blue-600 font-medium mb-1">Transaksi berhasil diproses.</p>
-                    <p class="text-[10px] text-slate-400 leading-relaxed">
+                <!-- Footer Note -->
+                <div class="text-center pt-3 mt-3.5 border-t border-slate-100">
+                    <p class="text-xs text-slate-600 font-medium">Transaksi berhasil diproses.</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
                         Harap simpan bukti transaksi ini.<br>
-                        Terima kasih telah menggunakan layanan<br>
+                        Terima kasih telah menggunakan layanan Bank Mini.
+                    </p>
+                    <p class="text-[10px] text-slate-300 mt-2">
+                        {{ now()->format('d/m/Y H:i:s') }}
                     </p>
                 </div>
 
-                <!-- Timestamp watermark -->
-                <div class="text-center text-[9px] text-slate-300 pb-4">
-                    {{ now()->format('d/m/Y H:i:s') }}
-                </div>
-
-            </div>
-
-            <!-- Receipt Bottom Zigzag Edge -->
-            <div class="w-full overflow-hidden no-print" style="height: 16px;">
-                <svg width="100%" height="16" viewBox="0 0 340 16" preserveAspectRatio="none">
-                    <defs>
-                        <pattern id="zigzag-bottom" x="0" y="0" width="20" height="16" patternUnits="userSpaceOnUse">
-                            <polygon points="0,0 10,16 20,0" fill="white"/>
-                        </pattern>
-                    </defs>
-                    <rect width="340" height="16" fill="url(#zigzag-bottom)"/>
-                </svg>
             </div>
 
         </div>
     </div>
 
-    <!-- Bottom Actions (below receipt) -->
-    <div class="flex justify-center mt-6 gap-3 no-print">
-        <a href="{{ route('teller.dashboard') }}" class="w-[340px] flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs rounded-md transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    <!-- Bottom Action Button -->
+    <div class="flex justify-center mt-4 no-print">
+        <a href="{{ route('teller.dashboard') }}" class="w-[350px] flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium text-xs rounded-lg transition shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
             Kembali ke Dashboard
         </a>
     </div>
