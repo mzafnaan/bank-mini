@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
@@ -23,11 +24,7 @@
         <!-- Brand Header -->
         <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-blue-600 rounded-md flex items-center justify-center text-white flex-shrink-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
-                    </svg>
-                </div>
+                <img src="{{ asset('images/logo.png') }}" alt="Logo SMK N 1 Bantul" class="w-10 h-10 object-contain flex-shrink-0">
                 <div>
                     <span class="font-bold text-slate-900 text-base leading-tight block">Bank Mini</span>
                     <span class="text-xs text-slate-500 block">Admin Panel</span>

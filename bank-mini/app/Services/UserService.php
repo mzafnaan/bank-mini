@@ -28,6 +28,8 @@ class UserService
         return User::create([
             'name' => $data['name'],
             'username' => $data['username'],
+            'email' => ! empty($data['email']) ? trim($data['email']) : null,
+            'email_verified_at' => ! empty($data['email']) ? now() : null,
             'password' => Hash::make($data['password']),
             'role' => $data['role'],
             'status' => $data['status'] ?? 'active',
@@ -42,6 +44,16 @@ class UserService
             'role' => $data['role'],
             'status' => $data['status'] ?? $user->status,
         ];
+
+        if (array_key_exists('email', $data)) {
+            $newEmail = ! empty($data['email']) ? trim($data['email']) : null;
+            $updateData['email'] = $newEmail;
+            if ($newEmail && $newEmail !== $user->email) {
+                $updateData['email_verified_at'] = now();
+            } elseif (! $newEmail) {
+                $updateData['email_verified_at'] = null;
+            }
+        }
 
         if (! empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);

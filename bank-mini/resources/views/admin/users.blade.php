@@ -29,6 +29,7 @@
                     <tr>
                         <th class="px-6 py-3">Nama</th>
                         <th class="px-6 py-3">Username</th>
+                        <th class="px-6 py-3">Email</th>
                         <th class="px-6 py-3">Role</th>
                         <th class="px-6 py-3">Status</th>
                         <th class="px-6 py-3 text-right">Aksi</th>
@@ -39,6 +40,7 @@
                         <tr class="hover:bg-slate-50 transition">
                             <td class="px-6 py-4 font-semibold text-slate-900">{{ $user->name }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ $user->username }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ $user->email ?? '-' }}</td>
                             <td class="px-6 py-4 capitalize">
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-700">
                                     {{ $user->role }}
@@ -123,6 +125,10 @@
                     <input type="text" name="username" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
                 <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email (untuk Reset Password)</label>
+                    <input type="email" name="email" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm" placeholder="staf@sekolah.sch.id">
+                </div>
+                <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password</label>
                     <input type="password" name="password" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
@@ -168,6 +174,10 @@
                     <input type="text" id="edit_username" name="username" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
                 <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email (untuk Reset Password)</label>
+                    <input type="email" id="edit_email" name="email" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm" placeholder="staf@sekolah.sch.id">
+                </div>
+                <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Password Baru (Opsional)</label>
                     <input type="password" name="password" placeholder="Kosongkan jika tidak diubah" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
@@ -201,6 +211,7 @@
             document.getElementById('formEditUser').action = '/admin/users/' + user.id;
             document.getElementById('edit_name').value = user.name;
             document.getElementById('edit_username').value = user.username;
+            document.getElementById('edit_email').value = user.email || '';
             document.getElementById('edit_role').value = user.role;
             document.getElementById('edit_status').value = user.status;
             initialUserStatus = user.status;

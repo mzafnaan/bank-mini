@@ -31,6 +31,7 @@
                         <th class="px-6 py-3">Nama Nasabah</th>
                         <th class="px-6 py-3">Kelas</th>
                         <th class="px-6 py-3">Telepon</th>
+                        <th class="px-6 py-3">Email</th>
                         <th class="px-6 py-3">Nomor Rekening</th>
                         <th class="px-6 py-3">Status Akun Login</th>
                         <th class="px-6 py-3 text-right">Aksi</th>
@@ -43,6 +44,7 @@
                             <td class="px-6 py-4 font-semibold text-slate-900">{{ $customer->name }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ $customer->class }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ $customer->phone ?? '-' }}</td>
+                            <td class="px-6 py-4 text-slate-600">{{ $customer->email ?? '-' }}</td>
                             <td class="px-6 py-4">
                                 @if($customer->bankAccount)
                                     <span class="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-blue-50 text-blue-700">
@@ -62,15 +64,27 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button onclick="editCustomer({{ json_encode($customer) }})"
-                                    class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition">
-                                    Edit
-                                </button>
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button onclick="editCustomer({{ json_encode($customer) }})"
+                                        class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition">
+                                        Edit
+                                    </button>
+                                    @if($customer->customerAccount)
+                                        <form action="{{ route('admin.customers.reset-password', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin mereset password akun {{ $customer->name }}? Password acak sementara akan dibuat dan nasabah wajib mengubahnya saat login.')">
+                                            @csrf
+                                            <button type="submit"
+                                                class="px-2.5 py-1 text-xs font-medium text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded transition"
+                                                title="Reset password nasabah ke password sementara acak">
+                                                Reset PW
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-6 text-center text-slate-400">Belum ada data nasabah.</td>
+                            <td colspan="8" class="px-6 py-6 text-center text-slate-400">Belum ada data nasabah.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -122,6 +136,11 @@
                     <input type="text" name="phone" placeholder="08xxxxxxxxxx" 
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email (Opsional, untuk Reset Password)</label>
+                    <input type="email" name="email" placeholder="siswa@sekolah.sch.id" 
+                        class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                </div>
                 
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="document.getElementById('modalAddCustomer').classList.add('hidden')" 
@@ -167,6 +186,11 @@
                     <input type="text" id="edit_phone" name="phone" 
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email (Opsional, untuk Reset Password)</label>
+                    <input type="email" id="edit_email" name="email" placeholder="siswa@sekolah.sch.id" 
+                        class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                </div>
                 <div class="pt-2 flex justify-end gap-2">
                     <button type="button" onclick="document.getElementById('modalEditCustomer').classList.add('hidden')" 
                         class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-md transition">
@@ -188,6 +212,7 @@
             document.getElementById('edit_name').value = customer.name;
             document.getElementById('edit_class').value = customer.class;
             document.getElementById('edit_phone').value = customer.phone || '';
+            document.getElementById('edit_email').value = customer.email || '';
             document.getElementById('modalEditCustomer').classList.remove('hidden');
         }
 
@@ -302,6 +327,83 @@
                 <!-- Footer -->
                 <div class="bg-slate-50/80 px-6 py-3.5 border-t border-slate-100 flex justify-end">
                     <button type="button" onclick="document.getElementById('modalCustomerCredentials').remove()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md shadow-sm transition">
+                        Tutup & Selesai
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Modal Credentials Reset Password -->
+    @if(session('reset_password_credentials'))
+        <div id="modalResetPasswordCredentials" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+            <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full overflow-hidden my-8">
+                <!-- Header -->
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base text-slate-900 leading-tight">Password Berhasil Direset</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Password sementara akun nasabah</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('modalResetPasswordCredentials').remove()" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-lg transition leading-none">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Body -->
+                <div class="p-6 space-y-4">
+                    <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
+                        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Nama Nasabah</div>
+                        <div class="text-base font-bold text-slate-900 mt-0.5">{{ session('reset_password_credentials')['name'] }}</div>
+                        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-2.5">NIS</div>
+                        <div class="text-sm font-semibold text-slate-700 mt-0.5 font-mono">{{ session('reset_password_credentials')['nis'] }}</div>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kredensial Login Baru</h4>
+                        
+                        <!-- Username -->
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200/70">
+                            <div>
+                                <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Username</span>
+                                <span class="text-sm font-bold text-slate-900 mt-0.5 block font-mono" id="reset-cred-username">{{ session('reset_password_credentials')['username'] }}</span>
+                            </div>
+                            <button type="button" onclick="copyCred('reset-cred-username', this)" class="px-3 py-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition shadow-sm">
+                                Salin
+                            </button>
+                        </div>
+
+                        <!-- Temporary Password -->
+                        <div class="flex items-center justify-between p-3 bg-amber-50/60 rounded-xl border border-amber-200">
+                            <div>
+                                <span class="text-[10px] font-semibold text-amber-800 uppercase tracking-wider block">Password Acak Sementara</span>
+                                <span class="text-sm font-bold text-amber-950 mt-0.5 block font-mono" id="reset-cred-password">{{ session('reset_password_credentials')['password'] }}</span>
+                            </div>
+                            <button type="button" onclick="copyCred('reset-cred-password', this)" class="px-3 py-1.5 text-xs font-medium text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition shadow-sm">
+                                Salin
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-amber-50/80 border border-amber-200 text-amber-900 text-xs rounded-xl flex items-start gap-2.5 leading-relaxed">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span>Password sementara ini hanya ditampilkan satu kali demi keamanan. Nasabah wajib mengganti password saat login pertama kali. Semua sesi dan token mobile nasabah telah dinonaktifkan.</span>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-slate-50/80 px-6 py-3.5 border-t border-slate-100 flex justify-end">
+                    <button type="button" onclick="document.getElementById('modalResetPasswordCredentials').remove()" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-medium text-sm rounded-md shadow-sm transition">
                         Tutup & Selesai
                     </button>
                 </div>

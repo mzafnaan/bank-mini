@@ -11,6 +11,7 @@ use App\Models\BankAccount;
 use App\Models\Customer;
 use App\Models\JournalEntry;
 use App\Models\User;
+use App\Services\AuthService;
 use App\Services\BankAccountService;
 use App\Services\CustomerService;
 use App\Services\JournalService;
@@ -25,7 +26,8 @@ class AdminController extends Controller
         protected UserService $userService,
         protected CustomerService $customerService,
         protected BankAccountService $bankAccountService,
-        protected JournalService $journalService
+        protected JournalService $journalService,
+        protected AuthService $authService
     ) {}
 
     /**
@@ -121,6 +123,35 @@ class AdminController extends Controller
     {
         $this->customerService->updateCustomer($customer, $request->validated());
         return redirect()->route('admin.customers')->with('success', 'Data nasabah berhasil diperbarui.');
+    }
+
+    /**
+     * Admin-initiated password reset for customer accounts.
+     * Generates a secure temporary password and forces the customer to change it on next login.
+     */
+    public function resetCustomerPassword(Customer $customer): RedirectResponse
+    {
+        $customerAccount = $customer->customerAccount;
+
+        if (! $customerAccount) {
+            return back()->with('error', 'Nasabah ini belum memiliki akun login.');
+        }
+
+        try {
+            $temporaryPassword = $this->authService->adminResetCustomerPassword($customerAccount);
+
+            return redirect()->route('admin.customers')->with([
+                'success' => "Password akun nasabah '{$customer->name}' berhasil direset.",
+                'reset_password_credentials' => [
+                    'name' => $customer->name,
+                    'nis' => $customer->nis,
+                    'username' => $customerAccount->username,
+                    'password' => $temporaryPassword,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     /**

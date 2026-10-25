@@ -15,7 +15,17 @@ class Customer extends Model
         'name',
         'class',
         'phone',
+        'email',
+        'email_verified_at',
+        'pending_email',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+        ];
+    }
 
     public function bankAccount(): HasOne
     {

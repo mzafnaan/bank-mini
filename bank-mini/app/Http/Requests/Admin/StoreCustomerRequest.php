@@ -19,6 +19,7 @@ class StoreCustomerRequest extends FormRequest
             'class' => ['required', 'string', 'max:20'],
             'major' => ['nullable', 'string', 'in:AK,BR,BD,MP,DKV,RPL,TKJ'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100', 'unique:customers,email'],
         ];
     }
 

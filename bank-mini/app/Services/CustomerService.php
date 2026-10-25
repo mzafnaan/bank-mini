@@ -48,6 +48,8 @@ class CustomerService
                 'name' => trim($data['name']),
                 'class' => trim($data['class']),
                 'phone' => ! empty($data['phone']) ? trim($data['phone']) : null,
+                'email' => ! empty($data['email']) ? trim($data['email']) : null,
+                'email_verified_at' => ! empty($data['email']) ? now() : null,
             ]);
 
             // Determine Major Code (AK, BR, BD, MP, DKV, RPL, TKJ)
@@ -100,11 +102,23 @@ class CustomerService
 
     public function updateCustomer(Customer $customer, array $data): bool
     {
-        return $customer->update([
+        $updateData = [
             'nis' => trim($data['nis']),
             'name' => trim($data['name']),
             'class' => trim($data['class']),
             'phone' => isset($data['phone']) ? trim($data['phone']) : $customer->phone,
-        ]);
+        ];
+
+        if (array_key_exists('email', $data)) {
+            $newEmail = ! empty($data['email']) ? trim($data['email']) : null;
+            $updateData['email'] = $newEmail;
+            if ($newEmail && $newEmail !== $customer->email) {
+                $updateData['email_verified_at'] = now();
+            } elseif (! $newEmail) {
+                $updateData['email_verified_at'] = null;
+            }
+        }
+
+        return $customer->update($updateData);
     }
 }

@@ -134,4 +134,82 @@ class AuthService
             'pin' => Hash::make($newPin),
         ]);
     }
+
+    /**
+     * Reset password after token validation (used by Password Broker flow).
+     * Revokes all Sanctum tokens for the account after password reset.
+     */
+    public function resetPassword(User|CustomerAccount $user, string $newPassword): void
+    {
+        $data = [
+            'password' => Hash::make($newPassword),
+        ];
+
+        if ($user instanceof CustomerAccount) {
+            $data['first_login'] = false;
+        }
+
+        $user->update($data);
+
+        // Revoke all Sanctum tokens for security
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+    }
+
+    /**
+     * Admin-initiated password reset for customer accounts.
+     * Generates a cryptographically secure random temporary password.
+     * Sets first_login=true to force password change on next login.
+     * Revokes all active Sanctum tokens.
+     *
+     * @return string The plaintext temporary password (display once, never log)
+     */
+    public function adminResetCustomerPassword(CustomerAccount $customerAccount): string
+    {
+        if ($customerAccount->status !== 'active') {
+            throw new \Exception('Tidak dapat mereset password akun yang tidak aktif.');
+        }
+
+        // Generate a cryptographically secure random password (12 chars)
+        $temporaryPassword = $this->generateSecureTemporaryPassword();
+
+        $customerAccount->update([
+            'password' => Hash::make($temporaryPassword),
+            'first_login' => true,
+        ]);
+
+        // Revoke all Sanctum tokens
+        $customerAccount->tokens()->delete();
+
+        return $temporaryPassword;
+    }
+
+    /**
+     * Generate a secure random temporary password.
+     * Uses random_bytes for cryptographic security.
+     * Returns a password with mixed case, digits, and special characters.
+     */
+    private function generateSecureTemporaryPassword(int $length = 12): string
+    {
+        $uppercase = 'ABCDEFGHJKMNPQRSTUVWXYZ';
+        $lowercase = 'abcdefghjkmnpqrstuvwxyz';
+        $digits = '23456789';
+        $special = '!@#$%&*';
+
+        // Ensure at least one of each category
+        $password = $uppercase[random_int(0, strlen($uppercase) - 1)]
+            . $lowercase[random_int(0, strlen($lowercase) - 1)]
+            . $digits[random_int(0, strlen($digits) - 1)]
+            . $special[random_int(0, strlen($special) - 1)];
+
+        // Fill remaining characters from combined pool
+        $pool = $uppercase . $lowercase . $digits . $special;
+        for ($i = strlen($password); $i < $length; $i++) {
+            $password .= $pool[random_int(0, strlen($pool) - 1)];
+        }
+
+        // Shuffle to avoid predictable pattern
+        return str_shuffle($password);
+    }
 }

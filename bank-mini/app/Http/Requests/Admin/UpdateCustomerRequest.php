@@ -21,6 +21,7 @@ class UpdateCustomerRequest extends FormRequest
             'name' => ['required', 'string', 'max:100'],
             'class' => ['required', 'string', 'max:20'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:100', Rule::unique('customers', 'email')->ignore($customerId)],
         ];
     }
 }

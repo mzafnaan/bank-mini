@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Notifications\ResetPasswordNotification;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -15,6 +16,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'username',
+        'email',
+        'email_verified_at',
         'password',
         'role',
         'status',
@@ -28,6 +31,7 @@ class User extends Authenticatable
     {
         return [
             'password' => 'hashed',
+            'email_verified_at' => 'datetime',
         ];
     }
 
@@ -49,5 +53,13 @@ class User extends Authenticatable
     public function dailyReportsAsSupervisor(): HasMany
     {
         return $this->hasMany(DailyReport::class, 'supervisor_id');
+    }
+
+    /**
+     * Send the password reset notification with custom template.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 }

@@ -3,21 +3,29 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\JournalEntry;
+use App\Http\Requests\Auth\ChangePasswordRequest;
+use App\Http\Requests\Auth\ChangePinRequest;
+use App\Http\Requests\Customer\AuthorizeWithdrawalRequest;
+use App\Http\Requests\Customer\UpdateEmailRequest;
+use App\Models\Customer;
 use App\Models\Transaction;
 use App\Models\WithdrawalRequest;
+use App\Notifications\VerifyCustomerEmailNotification;
 use App\Services\AuthService;
+use App\Services\CustomerWithdrawalService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
     public function __construct(
-        protected AuthService $authService
+        protected AuthService $authService,
+        protected CustomerWithdrawalService $withdrawalService
     ) {}
 
     /**
@@ -51,7 +59,7 @@ class CustomerController extends Controller
             ->take(5)
             ->get();
 
-        // Active pending withdrawal request waiting for customer PIN authorization (BR-039, BR-040, DD-006)
+        // Active pending withdrawal request waiting for customer PIN authorization
         $pendingWithdrawal = WithdrawalRequest::with('teller')
             ->where('bank_account_id', $bankAccount?->id)
             ->where('status', 'waiting')
@@ -165,28 +173,18 @@ class CustomerController extends Controller
     }
 
     /**
-     * Handle Customer Password Update.
+     * Handle Customer Password Update via AuthService.
      */
-    public function updatePassword(Request $request): RedirectResponse
+    public function updatePassword(ChangePasswordRequest $request): RedirectResponse
     {
-        $request->validate([
-            'current_password' => ['required', 'string'],
-            'new_password' => ['required', 'string', 'min:6', 'confirmed'],
-        ], [
-            'current_password.required' => 'Password saat ini wajib diisi.',
-            'new_password.required' => 'Password baru wajib diisi.',
-            'new_password.min' => 'Password baru minimal 6 karakter.',
-            'new_password.confirmed' => 'Konfirmasi password baru tidak cocok.',
-        ]);
-
         /** @var \App\Models\CustomerAccount $customerAccount */
         $customerAccount = auth()->guard('customer_web')->user();
 
         try {
             $this->authService->changePassword(
                 $customerAccount,
-                $request->input('current_password'),
-                $request->input('new_password')
+                $request->validated('current_password'),
+                $request->validated('new_password')
             );
 
             return back()->with('success', 'Password akun Anda berhasil diperbarui.');
@@ -196,29 +194,18 @@ class CustomerController extends Controller
     }
 
     /**
-     * Handle Customer PIN Update.
+     * Handle Customer PIN Update via AuthService.
      */
-    public function updatePin(Request $request): RedirectResponse
+    public function updatePin(ChangePinRequest $request): RedirectResponse
     {
-        $request->validate([
-            'current_pin' => ['required', 'string', 'digits:6'],
-            'new_pin' => ['required', 'string', 'digits:6', 'confirmed'],
-        ], [
-            'current_pin.required' => 'PIN saat ini wajib diisi.',
-            'current_pin.digits' => 'PIN saat ini harus 6 digit angka.',
-            'new_pin.required' => 'PIN baru wajib diisi.',
-            'new_pin.digits' => 'PIN baru harus 6 digit angka.',
-            'new_pin.confirmed' => 'Konfirmasi PIN baru tidak cocok.',
-        ]);
-
         /** @var \App\Models\CustomerAccount $customerAccount */
         $customerAccount = auth()->guard('customer_web')->user();
 
         try {
             $this->authService->changePin(
                 $customerAccount,
-                $request->input('current_pin'),
-                $request->input('new_pin')
+                $request->validated('current_pin'),
+                $request->validated('new_pin')
             );
 
             return back()->with('success', 'PIN otorisasi transaksi Anda berhasil diperbarui.');
@@ -228,118 +215,145 @@ class CustomerController extends Controller
     }
 
     /**
-     * Authorize a pending Withdrawal Request via Customer's own device with PIN (BR-039, BR-040, DD-006).
+     * Authorize a pending Withdrawal Request using CustomerWithdrawalService.
      */
-    public function authorizeWithdrawal(Request $request, WithdrawalRequest $withdrawalRequest): RedirectResponse
+    public function authorizeWithdrawal(AuthorizeWithdrawalRequest $request, WithdrawalRequest $withdrawalRequest): RedirectResponse
     {
-        $request->validate([
-            'pin' => ['required', 'string', 'digits:6'],
-        ], [
-            'pin.required' => 'PIN otorisasi 6 digit wajib dimasukkan.',
-            'pin.digits' => 'PIN otorisasi harus terdiri dari 6 digit angka.',
-        ]);
-
         /** @var \App\Models\CustomerAccount $customerAccount */
         $customerAccount = auth()->guard('customer_web')->user();
-        $bankAccount = $customerAccount->customer->bankAccount;
-
-        // Verify account ownership
-        if (! $bankAccount || $withdrawalRequest->bank_account_id !== $bankAccount->id) {
-            return back()->with('error', 'Permintaan penarikan ini bukan milik rekening Anda.');
-        }
-
-        // Verify status
-        if ($withdrawalRequest->status !== 'waiting') {
-            return back()->with('error', 'Permintaan penarikan ini sudah tidak dalam status menunggu otorisasi.');
-        }
-
-        // Verify expiration
-        if ($withdrawalRequest->expires_at && $withdrawalRequest->expires_at->isPast()) {
-            $withdrawalRequest->update(['status' => 'expired']);
-            return back()->with('error', 'Permintaan penarikan ini telah kedaluwarsa.');
-        }
-
-        // Verify Bank Account Active
-        if ($bankAccount->status === 'inactive') {
-            return back()->with('error', 'Rekening Anda sedang tidak aktif dan tidak dapat digunakan untuk transaksi.');
-        }
-
-        // Validate PIN
-        if (! Hash::check($request->input('pin'), $customerAccount->pin)) {
-            return back()->withErrors(['pin' => 'PIN otorisasi salah. Silakan coba kembali.']);
-        }
-
-        // Validate Balance and Minimum balance rule (BR-044)
-        $minimumBalance = 10000;
-        if (($bankAccount->balance - $withdrawalRequest->amount) < $minimumBalance) {
-            return back()->with('error', 'Saldo tidak mencukupi untuk penarikan ini. Sisa saldo mengendap minimal Rp 10.000.');
-        }
 
         try {
-            DB::transaction(function () use ($bankAccount, $withdrawalRequest) {
-                // 1. Decrement balance
-                $bankAccount->decrement('balance', $withdrawalRequest->amount);
-
-                // 2. Create transaction record
-                $transaction = Transaction::create([
-                    'bank_account_id' => $bankAccount->id,
-                    'teller_id' => $withdrawalRequest->teller_id,
-                    'type' => 'withdrawal',
-                    'amount' => $withdrawalRequest->amount,
-                ]);
-
-                // 3. Create accounting journal entries
-                // Debit: Tabungan Nasabah (201)
-                JournalEntry::create([
-                    'transaction_id' => $transaction->id,
-                    'account_code' => '201',
-                    'type' => 'debit',
-                    'amount' => $withdrawalRequest->amount,
-                ]);
-
-                // Credit: Kas (101)
-                JournalEntry::create([
-                    'transaction_id' => $transaction->id,
-                    'account_code' => '101',
-                    'type' => 'credit',
-                    'amount' => $withdrawalRequest->amount,
-                ]);
-
-                // 4. Update withdrawal request status
-                $withdrawalRequest->update([
-                    'status' => 'approved',
-                    'approved_at' => now(),
-                ]);
-            });
+            $this->withdrawalService->authorize(
+                $customerAccount,
+                $withdrawalRequest,
+                $request->validated('pin')
+            );
 
             return back()->with('success', 'Penarikan tunai sebesar Rp ' . number_format($withdrawalRequest->amount, 0, ',', '.') . ' berhasil disetujui. Teller dapat menyerahkan uang fisik kepada Anda.');
+        } catch (ValidationException $e) {
+            throw $e;
         } catch (Exception $e) {
-            return back()->with('error', 'Gagal memproses otorisasi penarikan: ' . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 
     /**
-     * Reject a pending Withdrawal Request by the customer.
+     * Reject a pending Withdrawal Request using CustomerWithdrawalService.
      */
     public function rejectWithdrawal(WithdrawalRequest $withdrawalRequest): RedirectResponse
     {
         /** @var \App\Models\CustomerAccount $customerAccount */
         $customerAccount = auth()->guard('customer_web')->user();
-        $bankAccount = $customerAccount->customer->bankAccount;
 
-        // Verify account ownership
-        if (! $bankAccount || $withdrawalRequest->bank_account_id !== $bankAccount->id) {
-            return back()->with('error', 'Permintaan penarikan ini bukan milik rekening Anda.');
+        try {
+            $this->withdrawalService->reject($customerAccount, $withdrawalRequest);
+
+            return back()->with('success', 'Permintaan penarikan tunai telah Anda tolak.');
+        } catch (Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
+    }
 
-        if ($withdrawalRequest->status !== 'waiting') {
-            return back()->with('error', 'Permintaan penarikan ini sudah tidak dalam status menunggu otorisasi.');
-        }
+    /**
+     * Request email verification / change for customer account.
+     * Keeps current email active as recovery email until the new pending email is verified.
+     */
+    public function requestEmailVerification(UpdateEmailRequest $request): RedirectResponse
+    {
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+        $customer = $customerAccount->customer;
+        $newEmail = strtolower(trim($request->validated('email')));
 
-        $withdrawalRequest->update([
-            'status' => 'rejected',
+        $customer->update([
+            'pending_email' => $newEmail,
         ]);
 
-        return back()->with('success', 'Permintaan penarikan tunai telah Anda tolak.');
+        $verificationUrl = URL::temporarySignedRoute(
+            'customer.email.verify',
+            now()->addMinutes(60),
+            ['customer' => $customer->id, 'email' => $newEmail]
+        );
+
+        Notification::route('mail', $newEmail)
+            ->notify(new VerifyCustomerEmailNotification($verificationUrl, $customer->name));
+
+        return back()->with('success', "Tautan verifikasi telah dikirim ke {$newEmail}. Silakan periksa inbox email Anda untuk mengaktifkannya.");
+    }
+
+    /**
+     * Resend verification email for pending email address.
+     */
+    public function resendEmailVerification(): RedirectResponse
+    {
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+        $customer = $customerAccount->customer;
+
+        if (! $customer->pending_email) {
+            return back()->withErrors(['email' => 'Tidak ada permintaan verifikasi email yang sedang tertunda.']);
+        }
+
+        $verificationUrl = URL::temporarySignedRoute(
+            'customer.email.verify',
+            now()->addMinutes(60),
+            ['customer' => $customer->id, 'email' => $customer->pending_email]
+        );
+
+        Notification::route('mail', $customer->pending_email)
+            ->notify(new VerifyCustomerEmailNotification($verificationUrl, $customer->name));
+
+        return back()->with('success', "Tautan verifikasi baru telah dikirimkan ulang ke {$customer->pending_email}.");
+    }
+
+    /**
+     * Cancel pending email change request.
+     */
+    public function cancelPendingEmail(): RedirectResponse
+    {
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+        $customer = $customerAccount->customer;
+
+        $customer->update(['pending_email' => null]);
+
+        return back()->with('success', 'Permintaan verifikasi email baru telah dibatalkan. Email aktif Anda tetap tidak berubah.');
+    }
+
+    /**
+     * Verify email via signed URL and promote pending_email to active recovery email.
+     */
+    public function verifyEmail(Request $request, Customer $customer): RedirectResponse
+    {
+        if (! $request->hasValidSignature()) {
+            if (auth()->guard('customer_web')->check()) {
+                return redirect()->route('customer.security')->with('error', 'Tautan verifikasi tidak valid atau sudah kedaluwarsa.');
+            }
+            return redirect()->route('login')->with('error', 'Tautan verifikasi tidak valid atau sudah kedaluwarsa.');
+        }
+
+        $email = $request->query('email');
+
+        if (! $customer->pending_email || $customer->pending_email !== $email) {
+            if (auth()->guard('customer_web')->check()) {
+                return redirect()->route('customer.security')->with('error', 'Permintaan verifikasi email ini sudah tidak berlaku atau sudah diverifikasi.');
+            }
+            return redirect()->route('login')->with('error', 'Permintaan verifikasi email ini sudah tidak berlaku atau sudah diverifikasi.');
+        }
+
+        // Promote pending_email to active verified email
+        $customer->update([
+            'email' => $customer->pending_email,
+            'email_verified_at' => now(),
+            'pending_email' => null,
+        ]);
+
+        if (auth()->guard('customer_web')->check()) {
+            return redirect()->route('customer.security')
+                ->with('success', "Alamat email {$customer->email} berhasil diverifikasi dan sekarang aktif sebagai email pemulihan akun Anda.");
+        }
+
+        return redirect()->route('login')
+            ->with('success', "Alamat email {$customer->email} berhasil diverifikasi! Sekarang Anda dapat menggunakannya untuk pemulihan akun jika lupa password.");
     }
 }

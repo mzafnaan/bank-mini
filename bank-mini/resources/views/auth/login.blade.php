@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
@@ -18,13 +19,11 @@
         
         <!-- Header -->
         <div class="text-center mb-8">
-            <div class="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mx-auto mb-3 text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M3 10h18M5 6l7-3 7 3M4 10v11M20 10v11M8 14v3M12 14v3M16 14v3"/>
-                </svg>
+            <div class="flex items-center justify-center mx-auto mb-3">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo SMK N 1 Bantul" class="w-20 h-20 object-contain">
             </div>
             <h1 class="text-xl font-bold text-slate-900">Bank Mini Sekolah</h1>
-            <p class="text-sm text-slate-500 mt-1">Sistem Informasi E-Teller</p>
+            <p class="text-sm text-slate-500 mt-1">SMK Negeri 1 Bantul</p>
         </div>
 
         <!-- Session Flash Notifications -->
@@ -37,6 +36,12 @@
         @if(session('success'))
             <div class="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 text-sm rounded-md">
                 {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('status'))
+            <div class="mb-4 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-md">
+                {{ session('status') }}
             </div>
         @endif
 
@@ -57,7 +62,12 @@
             </div>
 
             <div>
-                <label for="password" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Password</label>
+                <div class="flex items-center justify-between mb-2">
+                    <label for="password" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider">Password</label>
+                    <a href="{{ route('password.request') }}" class="text-xs text-blue-600 hover:text-blue-700 font-medium hover:underline">
+                        Lupa Password?
+                    </a>
+                </div>
                 <input type="password" id="password" name="password" required
                     class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 transition"
                     placeholder="Masukkan password">

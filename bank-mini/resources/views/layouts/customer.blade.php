@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
     <style>
         body { font-family: 'Inter', sans-serif; }
         @media print {
@@ -29,11 +30,7 @@
         <!-- Brand Header -->
         <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-blue-600 rounded-md flex items-center justify-center text-white flex-shrink-0 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                    </svg>
-                </div>
+                <img src="{{ asset('images/logo.png') }}" alt="Logo SMK N 1 Bantul" class="w-10 h-10 object-contain flex-shrink-0">
                 <div>
                     <span class="font-bold text-slate-900 text-base leading-tight block">Bank Mini</span>
                     <span class="text-xs text-slate-500 block">Portal Nasabah</span>
@@ -79,7 +76,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                 </svg>
-                <span>Keamanan Akun</span>
+                <span>Keamanan & Email</span>
             </a>
 
         </nav>
@@ -97,7 +94,7 @@
                         {{ $customerProfile?->name ?? $currentAccount?->username }}
                     </span>
                     <span class="block text-xs text-blue-600 font-medium truncate">
-                        {{ $bankAccount?->account_number ?? 'Nasabah' }} {{ $customerProfile?->class ? '• ' . $customerProfile->class : '' }}
+                        {{ $bankAccount?->account_number ?? 'Nasabah' }}
                     </span>
                 </div>
                 
@@ -126,60 +123,28 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-
-                <div class="flex items-center gap-2">
-                    <span class="text-sm font-semibold text-slate-800 hidden sm:inline">Selamat datang,</span>
-                    <span class="text-sm font-bold text-slate-900 truncate max-w-[200px] sm:max-w-xs">{{ $customerProfile?->name ?? 'Nasabah' }}</span>
-                </div>
             </div>
 
-            <!-- Header Quick Badge -->
-            <div class="flex items-center gap-2.5">
-                @if($bankAccount)
-                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-md text-xs">
-                        <span class="text-slate-500 font-medium">Rekening:</span>
-                        <span class="font-bold text-slate-900">{{ $bankAccount->account_number }}</span>
-                        @if($bankAccount->status === 'active')
-                            <span class="w-2 h-2 rounded-full bg-emerald-500" title="Rekening Aktif"></span>
-                        @else
-                            <span class="w-2 h-2 rounded-full bg-rose-500" title="Rekening Nonaktif"></span>
-                        @endif
-                    </div>
-                @endif
-                <a href="{{ route('customer.qr-code') }}" class="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-xs rounded-md border border-blue-200 transition flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                    </svg>
-                    <span>Kartu Digital</span>
-                </a>
-            </div>
+
         </header>
 
         <!-- Flash Messages -->
         <div class="px-4 sm:px-6 lg:px-8 mt-6 w-full no-print">
             @if(session('success'))
-                <div class="p-3.5 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-md mb-4 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>{{ session('success') }}</span>
-                    </div>
+                <div class="p-3.5 bg-blue-50 border border-blue-200 text-blue-800 text-sm rounded-md mb-4 flex items-center justify-between">
+                    <span>{{ session('success') }}</span>
                 </div>
             @endif
 
             @if(session('error'))
-                <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-md mb-4 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-rose-600 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>{{ session('error') }}</span>
+                <div class="p-3.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-md mb-4">
+                    {{ session('error') }}
                 </div>
             @endif
 
             @if($errors->any())
-                <div class="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-md mb-4">
-                    <ul class="list-disc list-inside space-y-1">
+                <div class="p-3.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-md mb-4">
+                    <ul class="list-disc list-inside">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -188,14 +153,9 @@
             @endif
 
             @if($currentAccount?->first_login)
-                <div class="p-4 bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-lg mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
-                    <div class="flex items-center gap-2.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                        <span>Ini adalah login pertama Anda. Demi keamanan akun, segera ganti password dan PIN default Anda.</span>
-                    </div>
-                    <a href="{{ route('customer.security') }}" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-md transition shadow-xs flex-shrink-0">
+                <div class="p-3.5 bg-blue-50 border border-blue-200 text-blue-900 text-sm rounded-md mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <span>Ini adalah login pertama Anda. Demi keamanan akun, segera ganti password dan PIN default Anda.</span>
+                    <a href="{{ route('customer.security') }}" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-md transition flex-shrink-0">
                         Ganti Password & PIN
                     </a>
                 </div>
