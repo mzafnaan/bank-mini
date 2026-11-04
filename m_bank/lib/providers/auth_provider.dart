@@ -164,6 +164,32 @@ class AuthProvider extends ChangeNotifier {
     return remember == 'true';
   }
 
+  /// Send forgot password request via email.
+  Future<Map<String, dynamic>> sendForgotPassword(String email) async {
+    try {
+      final response = await _api.forgotPassword(email: email);
+      final data = response.data as Map<String, dynamic>;
+      return {
+        'success': data['success'] == true,
+        'message': data['message'] as String? ?? 'Permintaan berhasil dikirim.',
+      };
+    } on DioException catch (e) {
+      String msg = 'Gagal mengirim permintaan reset password.';
+      if (e.response?.data is Map<String, dynamic>) {
+        msg = e.response!.data['message'] as String? ?? msg;
+      }
+      return {
+        'success': false,
+        'message': msg,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan sistem: $e',
+      };
+    }
+  }
+
   /// Clear error message.
   void clearError() {
     _error = null;

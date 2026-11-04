@@ -1,3 +1,4 @@
+import 'pending_withdrawal.dart';
 import 'transaction.dart';
 
 /// Dashboard summary data returned by the API.
@@ -8,6 +9,7 @@ class DashboardData {
   final double totalDeposit;
   final double totalWithdrawal;
   final List<Transaction> recentTransactions;
+  final PendingWithdrawal? pendingWithdrawal;
 
   DashboardData({
     required this.customerName,
@@ -16,6 +18,7 @@ class DashboardData {
     required this.totalDeposit,
     required this.totalWithdrawal,
     required this.recentTransactions,
+    this.pendingWithdrawal,
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
@@ -29,6 +32,11 @@ class DashboardData {
       recentTransactions: recent
           .map((e) => Transaction.fromJson(e as Map<String, dynamic>))
           .toList(),
+      pendingWithdrawal: json['pending_withdrawal'] != null
+          ? PendingWithdrawal.fromJson(
+              json['pending_withdrawal'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 }

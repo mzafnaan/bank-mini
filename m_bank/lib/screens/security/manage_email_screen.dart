@@ -286,25 +286,32 @@ class _ManageEmailScreenState extends State<ManageEmailScreen> {
                                       color: Color(0xFF6B7280),
                                     ),
                                   ),
-                                  const Spacer(),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: const Color(0xFFE5E7EB)),
-                                    ),
-                                    child: Text(
-                                      _isVerified
-                                          ? 'Siap digunakan untuk Lupa Password'
-                                          : 'Menunggu Verifikasi',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w500,
-                                        color: _isVerified
-                                            ? const Color(0xFF374151)
-                                            : AppColors.warning,
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.centerRight,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: const Color(0xFFE5E7EB)),
+                                        ),
+                                        child: Text(
+                                          _isVerified
+                                              ? 'Siap untuk Lupa Password'
+                                              : 'Menunggu Verifikasi',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: _isVerified
+                                                ? const Color(0xFF374151)
+                                                : AppColors.warning,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),

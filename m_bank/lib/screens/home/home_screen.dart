@@ -4,6 +4,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/formatters.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/pending_withdrawal_card.dart';
 import '../../widgets/transaction_item.dart';
 import '../history/transaction_detail_screen.dart';
 
@@ -110,6 +111,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Pending Cash Withdrawal Alert Card
+                if (account.pendingWithdrawal != null)
+                  PendingWithdrawalCard(request: account.pendingWithdrawal!),
 
                 // Main Saldo Card
                 Container(

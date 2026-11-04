@@ -60,6 +60,13 @@ class ApiClient {
     });
   }
 
+  /// Request password reset link to email.
+  Future<Response> forgotPassword({required String email}) {
+    return _dio.post('/auth/forgot-password', data: {
+      'email': email,
+    });
+  }
+
   /// Get authenticated user profile.
   Future<Response> getProfile() {
     return _dio.get('/auth/me');
@@ -116,6 +123,26 @@ class ApiClient {
   /// Get account/rekening information.
   Future<Response> getAccountInfo() {
     return _dio.get('/nasabah/rekening');
+  }
+
+  /// Get pending cash withdrawal request for the customer.
+  Future<Response> getPendingWithdrawal() {
+    return _dio.get('/nasabah/withdrawal-requests/pending');
+  }
+
+  /// Authorize a pending withdrawal request with 6-digit PIN.
+  Future<Response> authorizeWithdrawal({
+    required int requestId,
+    required String pin,
+  }) {
+    return _dio.post('/nasabah/withdrawal-requests/$requestId/authorize', data: {
+      'pin': pin,
+    });
+  }
+
+  /// Reject a pending withdrawal request.
+  Future<Response> rejectWithdrawal(int requestId) {
+    return _dio.post('/nasabah/withdrawal-requests/$requestId/reject');
   }
 
   /// Get recovery email status.
