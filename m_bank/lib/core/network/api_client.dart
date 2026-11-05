@@ -103,6 +103,19 @@ class ApiClient {
     });
   }
 
+  /// Reset PIN using account password verification (Lupa PIN).
+  Future<Response> resetPinWithPassword({
+    required String password,
+    required String newPin,
+    required String newPinConfirmation,
+  }) {
+    return _dio.post('/auth/reset-pin-with-password', data: {
+      'password': password,
+      'new_pin': newPin,
+      'new_pin_confirmation': newPinConfirmation,
+    });
+  }
+
   // ─── Nasabah / Account Endpoints ──────────────────────────────
 
   /// Get account balance and summary.

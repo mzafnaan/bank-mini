@@ -11,6 +11,9 @@
 .svn/
 .swiftpm/
 migrate_working_dir/
+Thumbs.db
+[Dd]esktop.ini
+AGENTS.md
 
 # IntelliJ related
 *.iml
@@ -18,10 +21,16 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Visual Studio Code
+.vscode/
+
+# Environment and Secrets
+.env
+.env.*
+*.keystore
+*.jks
+key.properties
+android/key.properties
 
 # Flutter/Dart/Pub related
 **/doc/api/

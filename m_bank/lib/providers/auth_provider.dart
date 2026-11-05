@@ -195,5 +195,39 @@ class AuthProvider extends ChangeNotifier {
     _error = null;
     notifyListeners();
   }
+
+  /// Reset PIN using account password verification (Lupa PIN).
+  Future<Map<String, dynamic>> resetPinWithPassword({
+    required String password,
+    required String newPin,
+    required String newPinConfirmation,
+  }) async {
+    try {
+      final response = await _api.resetPinWithPassword(
+        password: password,
+        newPin: newPin,
+        newPinConfirmation: newPinConfirmation,
+      );
+      final data = response.data as Map<String, dynamic>;
+      return {
+        'success': data['success'] == true,
+        'message': data['message'] as String? ?? 'PIN berhasil diperbarui.',
+      };
+    } on DioException catch (e) {
+      String msg = 'Gagal memperbarui PIN.';
+      if (e.response?.data is Map<String, dynamic>) {
+        msg = e.response!.data['message'] as String? ?? msg;
+      }
+      return {
+        'success': false,
+        'message': msg,
+      };
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'Terjadi kesalahan sistem: $e',
+      };
+    }
+  }
 }
 

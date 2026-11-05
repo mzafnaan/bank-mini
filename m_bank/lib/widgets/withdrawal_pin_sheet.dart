@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../core/utils/formatters.dart';
 import '../models/pending_withdrawal.dart';
 import '../providers/account_provider.dart';
+import 'forgot_pin_sheet.dart';
 
 /// Modal bottom sheet for entering 6-digit PIN to authorize cash withdrawal.
 class WithdrawalPinSheet extends StatefulWidget {
@@ -564,17 +565,53 @@ class _WithdrawalPinSheetState extends State<WithdrawalPinSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Reject Button
-            TextButton(
-              onPressed: _isLoading ? null : _confirmReject,
-              child: const Text(
-                'Tolak Transaksi Penarikan Ini',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFDC2626),
+            // Forgot PIN & Reject Actions
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final updated = await ForgotPinSheet.show(context);
+                          if (updated == true && mounted) {
+                            setState(() {
+                              _pin = '';
+                              _errorMessage = null;
+                            });
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('PIN berhasil diperbarui. Silakan masukkan PIN baru untuk otorisasi.'),
+                                backgroundColor: Color(0xFF16A34A),
+                              ),
+                            );
+                          }
+                        },
+                  child: const Text(
+                    'Lupa PIN?',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF2563EB),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                const Text('•', style: TextStyle(color: Color(0xFFCBD5E1))),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: _isLoading ? null : _confirmReject,
+                  child: const Text(
+                    'Tolak Transaksi',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFFDC2626),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
