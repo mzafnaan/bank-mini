@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Models\JournalEntry;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class JournalService
 {
-    public function getAllJournals(?string $search = null): Collection
+    public function getAllJournals(?string $search = null, int $perPage = 25): LengthAwarePaginator
     {
         $query = JournalEntry::with(['transaction.bankAccount.customer', 'transaction.teller'])
             ->orderBy('created_at', 'desc');
@@ -24,6 +24,6 @@ class JournalService
             });
         }
 
-        return $query->get();
+        return $query->paginate($perPage)->withQueryString();
     }
 }

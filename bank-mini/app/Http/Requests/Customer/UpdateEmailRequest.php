@@ -23,6 +23,7 @@ class UpdateEmailRequest extends FormRequest
                 'email',
                 'max:100',
                 Rule::unique('customers', 'email')->ignore($customerId),
+                Rule::unique('customers', 'pending_email')->ignore($customerId),
             ],
         ];
     }

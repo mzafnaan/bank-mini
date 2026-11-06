@@ -18,115 +18,101 @@
                     </svg>
                 </div>
                 <div>
-                    <h2 class="text-base font-semibold text-slate-900">Email Pemulihan Akun</h2>
-                    <p class="text-xs text-slate-500">Digunakan untuk menerima tautan atur ulang password jika Anda lupa kata sandi.</p>
+                    <h2 class="text-sm font-bold text-slate-900">Email Pemulihan Akun</h2>
+                    <p class="text-xs text-slate-500">Menerima tautan reset password jika Anda lupa kata sandi.</p>
                 </div>
             </div>
 
-            @if($customer->email && $customer->email_verified_at)
-                <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            @if($customer->pending_email)
+                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-md bg-amber-50 text-amber-700 border border-amber-200">
+                    Menunggu Verifikasi
+                </span>
+            @elseif($customer->email && $customer->email_verified_at)
+                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
                     <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     Terverifikasi
                 </span>
             @else
-                <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
+                <span class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 text-slate-600">
                     Belum Diatur
                 </span>
             @endif
         </div>
 
-        <div class="p-6 space-y-6">
-            <!-- Current Active Email Info -->
-            <div class="p-4 rounded-lg bg-slate-50 border border-slate-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div>
-                    <span class="text-xs font-medium text-slate-500 uppercase tracking-wider block">Email Pemulihan Aktif Saat Ini</span>
-                    @if($customer->email && $customer->email_verified_at)
-                        <span class="text-base font-bold text-slate-900 mt-0.5 block font-mono">{{ $customer->email }}</span>
-                        <span class="text-xs text-slate-500 mt-1 block">Diverifikasi pada {{ $customer->email_verified_at->translatedFormat('d F Y, H:i') }}</span>
-                    @else
-                        <span class="text-sm font-semibold text-amber-700 mt-0.5 block">Belum ada email yang terverifikasi</span>
-                        <span class="text-xs text-slate-500 mt-1 block">Tambahkan email Anda di bawah agar dapat melakukan pemulihan password secara mandiri.</span>
-                    @endif
-                </div>
-
-                @if($customer->email && $customer->email_verified_at)
-                    <div class="text-xs text-slate-400 bg-white px-3 py-1.5 rounded border border-slate-200 self-start sm:self-auto">
-                        Status: Siap digunakan untuk Lupa Password
-                    </div>
-                @endif
-            </div>
-
-            <!-- Pending Verification Alert Box -->
+        <div class="p-6">
             @if($customer->pending_email)
-                <div class="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-900">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-sm font-bold text-amber-900">Verifikasi Email Baru Sedang Tertunda</h3>
-                            <p class="text-xs text-amber-800 mt-1 leading-relaxed">
-                                Tautan verifikasi telah dikirimkan ke <strong class="font-mono text-slate-900">{{ $customer->pending_email }}</strong>. 
+                <!-- Tampilan Simpel Saat Verifikasi Tertunda -->
+                <div class="p-4 bg-amber-50/70 border border-amber-200 rounded-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                                <span class="text-xs font-semibold text-amber-800 uppercase tracking-wider">Verifikasi Email Baru</span>
+                            </div>
+                            <div class="text-base font-bold text-slate-900 font-mono mt-1">
+                                {{ $customer->pending_email }}
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Tautan verifikasi telah dikirim. Buka kotak masuk atau spam email Anda untuk mengonfirmasi.
                                 @if($customer->email)
-                                    Email pemulihan aktif Anda tetap <strong class="font-mono text-slate-900">{{ $customer->email }}</strong> sampai email baru diverifikasi.
-                                @else
-                                    Buka tautan di inbox email tersebut untuk mengaktifkannya sebagai email pemulihan akun Anda.
+                                    <span class="block text-slate-400 mt-0.5">Email aktif saat ini ({{ $customer->email }}) tetap berlaku hingga email baru diverifikasi.</span>
                                 @endif
                             </p>
+                        </div>
 
-                            <div class="mt-3 flex flex-wrap items-center gap-2">
-                                <form action="{{ route('customer.security.email.resend') }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs rounded shadow-sm transition">
-                                        Kirim Ulang Tautan Verifikasi
-                                    </button>
-                                </form>
-
-                                <form action="{{ route('customer.security.email.cancel') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan verifikasi email baru ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-medium text-xs rounded transition">
-                                        Batalkan
-                                    </button>
-                                </form>
-                            </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <form action="{{ route('customer.security.email.resend') }}" method="POST" class="inline">
+                                @csrf
+                                <button type="submit" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs rounded-md shadow-sm transition">
+                                    Kirim Ulang
+                                </button>
+                            </form>
+                            <form action="{{ route('customer.security.email.cancel') }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan verifikasi email ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-medium text-xs rounded-md transition">
+                                    Batalkan
+                                </button>
+                            </form>
                         </div>
                     </div>
+                </div>
+            @else
+                <!-- Tampilan Simpel Normal -->
+                <div class="space-y-4">
+                    @if($customer->email && $customer->email_verified_at)
+                        <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-lg border border-slate-200">
+                            <div>
+                                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Email Aktif</span>
+                                <span class="text-sm font-bold text-slate-800 font-mono mt-0.5 block">{{ $customer->email }}</span>
+                            </div>
+                            <span class="text-xs text-slate-400">
+                                Diverifikasi {{ $customer->email_verified_at->translatedFormat('d M Y') }}
+                            </span>
+                        </div>
+                    @endif
+
+                    <form action="{{ route('customer.security.email') }}" method="POST">
+                        @csrf
+                        <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
+                            {{ $customer->email ? 'Ganti Alamat Email' : 'Daftarkan Email Pemulihan' }}
+                        </label>
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="email" id="email" name="email" value="{{ old('email') }}" required
+                                placeholder="contoh: nama.nasabah@gmail.com"
+                                class="flex-1 px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition @error('email') border-red-500 @enderror">
+                            <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition whitespace-nowrap">
+                                Kirim Tautan Verifikasi
+                            </button>
+                        </div>
+                        @error('email')
+                            <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span>
+                        @enderror
+                    </form>
                 </div>
             @endif
-
-            <!-- Form Add / Change Email -->
-            <form action="{{ route('customer.security.email') }}" method="POST" class="space-y-3">
-                @csrf
-                <div>
-                    <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                        {{ $customer->email ? 'Ganti dengan Alamat Email Baru' : 'Masukkan Alamat Email Anda' }}
-                    </label>
-                    <div class="flex flex-col sm:flex-row gap-2.5">
-                        <div class="flex-1">
-                            <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                                   placeholder="contoh: nama.nasabah@gmail.com"
-                                   class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition @error('email') border-red-500 @enderror">
-                            @error('email')
-                                <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span>
-                            @enderror
-                        </div>
-                        <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition flex-shrink-0 flex items-center justify-center gap-1.5">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                            </svg>
-                            Kirim Tautan Verifikasi
-                        </button>
-                    </div>
-                    <p class="text-xs text-slate-400 mt-1.5">
-                        Kami akan mengirimkan email konfirmasi. Jika Anda mengganti email lama, email lama Anda tidak akan diganti sampai email baru berhasil diverifikasi.
-                    </p>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -195,7 +181,12 @@
                     @csrf
 
                     <div>
-                        <label for="current_pin" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">PIN Saat Ini</label>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label for="current_pin" class="block text-xs font-semibold uppercase tracking-wider text-slate-500">PIN Saat Ini</label>
+                            <button type="button" onclick="document.getElementById('modalResetPin').classList.remove('hidden')" class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                Lupa PIN?
+                            </button>
+                        </div>
                         <input type="password" id="current_pin" name="current_pin" required maxlength="6" pattern="[0-9]{6}" placeholder="6 digit angka"
                                class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
                         @error('current_pin')
@@ -227,5 +218,60 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Modal Reset PIN via Password Akun -->
+    <div id="modalResetPin" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Atur Ulang PIN Transaksi</h3>
+                        <p class="text-xs text-slate-500">Gunakan password akun Anda untuk mereset PIN.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('modalResetPin').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none">&times;</button>
+            </div>
+
+            <form action="{{ route('customer.security.reset-pin') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Password Akun Login *</label>
+                    <input type="password" name="password" required placeholder="Masukkan password login Anda"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-600">
+                    @error('pin_password')
+                        <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">PIN Baru (6 Digit) *</label>
+                    <input type="password" name="new_pin" required maxlength="6" pattern="[0-9]{6}" placeholder="Contoh: 123456"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-600">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Konfirmasi PIN Baru *</label>
+                    <input type="password" name="new_pin_confirmation" required maxlength="6" pattern="[0-9]{6}" placeholder="Ulangi 6 digit PIN baru"
+                           class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:border-blue-600">
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" onclick="document.getElementById('modalResetPin').classList.add('hidden')"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-md transition">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md shadow-sm transition">
+                        Simpan PIN Baru
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 @endsection

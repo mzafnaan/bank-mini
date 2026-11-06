@@ -142,11 +142,11 @@
                         @forelse($account->transactions as $trx)
                             <tr class="hover:bg-slate-50 transition">
                                 <td class="px-6 py-3.5 text-sm text-slate-500">{{ $trx->created_at ? $trx->created_at->format('d/m/Y H:i') : '-' }}</td>
-                                <td class="px-6 py-3.5">
+                                <td class="px-6 py-3.5 whitespace-nowrap">
                                     @if($trx->type === 'deposit')
-                                        <span class="px-2.5 py-0.5 text-xs font-medium rounded bg-blue-50 text-blue-700">+ Setoran</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">Setoran</span>
                                     @else
-                                        <span class="px-2.5 py-0.5 text-xs font-medium rounded bg-slate-100 text-slate-700">- Penarikan</span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-medium bg-rose-50 text-rose-700 border border-rose-200 whitespace-nowrap">Penarikan</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-3.5 text-right font-medium text-slate-900">Rp {{ number_format($trx->amount, 0, ',', '.') }}</td>

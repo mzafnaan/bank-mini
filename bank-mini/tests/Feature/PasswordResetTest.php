@@ -47,8 +47,12 @@ class PasswordResetTest extends TestCase
             'email' => $email,
         ]);
 
-        if ($email && ! $verified) {
-            $customer->update(['email_verified_at' => null]);
+        if ($email && $verified) {
+            $customer->update([
+                'email' => $email,
+                'email_verified_at' => now(),
+                'pending_email' => null,
+            ]);
         }
 
         if ($status !== 'active') {
@@ -59,44 +63,68 @@ class PasswordResetTest extends TestCase
     }
 
     /**
-     * Skenario 1: Reset password akun internal melalui email.
+     * Skenario 1: Pengguna internal tidak dapat reset password via email (harus melalui Admin).
      */
-    public function test_internal_user_can_request_and_reset_password_via_email(): void
+    public function test_internal_user_cannot_reset_password_via_email(): void
     {
         $user = $this->createInternalUser('teller', 'teller_reset', 'teller_reset@bankmini.test', true);
 
-        // 1. Request reset link
+        // 1. Request reset link via email
         $response = $this->post(route('password.email'), [
             'email' => 'teller_reset@bankmini.test',
         ]);
 
-        $response->assertSessionHas('status');
+        $response->assertSessionHasErrors('email');
+        $this->assertStringContainsString('Administrator', session('errors')->first('email'));
 
-        // Verify token created in password_reset_tokens
+        // Verify token is NOT created in password_reset_tokens
         $tokenRecord = DB::table('password_reset_tokens')->where('email', 'teller_reset@bankmini.test')->first();
-        $this->assertNotNull($tokenRecord);
+        $this->assertNull($tokenRecord);
 
-        // Generate broker token for resetting
-        $token = Password::broker('users')->createToken($user);
-
-        // 2. Submit new password
+        // 2. Direct attempt to submit password update for internal user must also fail
         $resetResponse = $this->post(route('password.update'), [
-            'token' => $token,
+            'token' => 'dummy_token',
             'email' => 'teller_reset@bankmini.test',
             'password' => 'NewSecurePassword123!',
             'password_confirmation' => 'NewSecurePassword123!',
         ]);
 
-        $resetResponse->assertRedirect(route('login'));
-        $resetResponse->assertSessionHas('success');
+        $resetResponse->assertSessionHasErrors('email');
+        $this->assertStringContainsString('Administrator', session('errors')->first('email'));
+    }
 
-        // Verify user password updated
-        $this->assertTrue(Hash::check('NewSecurePassword123!', $user->fresh()->password));
+    /**
+     * Skenario 1b: Password pengguna internal dapat direset langsung oleh Administrator.
+     */
+    public function test_internal_user_password_can_be_reset_by_admin(): void
+    {
+        $admin = $this->createInternalUser('administrator', 'admin_boss');
+        $teller = $this->createInternalUser('teller', 'teller_staff', 'teller@bankmini.test');
+        $oldPasswordHash = $teller->password;
 
-        // Verify can login with new password
+        // Admin resets internal user password
+        $response = $this->actingAs($admin, 'web')
+            ->post(route('admin.users.reset-password', $teller));
+
+        $response->assertRedirect(route('admin.users'));
+        $response->assertSessionHas('success');
+        $response->assertSessionHas('reset_password_credentials');
+
+        $credentials = session('reset_password_credentials');
+        $this->assertEquals($teller->name, $credentials['name']);
+        $this->assertEquals($teller->username, $credentials['username']);
+        $this->assertEquals('teller', $credentials['role']);
+        $this->assertNotEmpty($credentials['password']);
+
+        // Verify password hash updated in database
+        $freshTeller = $teller->fresh();
+        $this->assertNotEquals($oldPasswordHash, $freshTeller->password);
+        $this->assertTrue(Hash::check($credentials['password'], $freshTeller->password));
+
+        // Verify teller can log in using new password
         $loginResponse = $this->post(route('login'), [
-            'username' => 'teller_reset',
-            'password' => 'NewSecurePassword123!',
+            'username' => 'teller_staff',
+            'password' => $credentials['password'],
         ]);
         $loginResponse->assertRedirect(route('teller.dashboard'));
     }
@@ -195,16 +223,16 @@ class PasswordResetTest extends TestCase
      */
     public function test_unverified_email_does_not_receive_reset_token(): void
     {
-        $this->createInternalUser('teller', 'unverified_teller', 'unverified@bankmini.test', false);
+        $this->createCustomerWithAccount('unverified_cust@bankmini.test', false);
 
         $response = $this->post(route('password.email'), [
-            'email' => 'unverified@bankmini.test',
+            'email' => 'unverified_cust@bankmini.test',
         ]);
 
         $response->assertSessionHas('status');
 
         // No token created for unverified email
-        $this->assertNull(DB::table('password_reset_tokens')->where('email', 'unverified@bankmini.test')->first());
+        $this->assertNull(DB::table('customer_password_reset_tokens')->where('email', 'unverified_cust@bankmini.test')->first());
     }
 
     /**
@@ -212,18 +240,18 @@ class PasswordResetTest extends TestCase
      */
     public function test_expired_reset_token_is_rejected(): void
     {
-        $user = $this->createInternalUser('supervisor', 'spv_expire', 'spv_expire@bankmini.test', true);
+        $customer = $this->createCustomerWithAccount('customer_expire@bankmini.test', true);
 
         // Insert token created 65 minutes ago (expire is 60 minutes)
-        DB::table('password_reset_tokens')->insert([
-            'email' => 'spv_expire@bankmini.test',
+        DB::table('customer_password_reset_tokens')->insert([
+            'email' => 'customer_expire@bankmini.test',
             'token' => Hash::make('expired_token_123'),
             'created_at' => now()->subMinutes(65),
         ]);
 
         $response = $this->post(route('password.update'), [
             'token' => 'expired_token_123',
-            'email' => 'spv_expire@bankmini.test',
+            'email' => 'customer_expire@bankmini.test',
             'password' => 'NewPassword123!',
             'password_confirmation' => 'NewPassword123!',
         ]);
@@ -236,8 +264,9 @@ class PasswordResetTest extends TestCase
      */
     public function test_reset_token_cannot_be_reused(): void
     {
-        $user = $this->createInternalUser('teller', 'teller_reuse', 'reuse@bankmini.test', true);
-        $token = Password::broker('users')->createToken($user);
+        $customer = $this->createCustomerWithAccount('reuse@bankmini.test', true);
+        $customerAccount = $customer->customerAccount;
+        $token = Password::broker('customer_accounts')->createToken($customerAccount);
 
         // 1st reset - succeeds
         $this->post(route('password.update'), [
@@ -263,8 +292,9 @@ class PasswordResetTest extends TestCase
      */
     public function test_invalid_new_password_is_rejected(): void
     {
-        $user = $this->createInternalUser('teller', 'teller_val', 'val@bankmini.test', true);
-        $token = Password::broker('users')->createToken($user);
+        $customer = $this->createCustomerWithAccount('val@bankmini.test', true);
+        $customerAccount = $customer->customerAccount;
+        $token = Password::broker('customer_accounts')->createToken($customerAccount);
 
         // Less than 6 characters
         $this->post(route('password.update'), [
@@ -299,18 +329,18 @@ class PasswordResetTest extends TestCase
     }
 
     /**
-     * Skenario 10: Akun tidak aktif tidak dapat melakukan reset password.
+     * Skenario 10: Akun nasabah tidak aktif tidak dapat melakukan reset password via email.
      */
     public function test_inactive_account_cannot_reset_password(): void
     {
-        $this->createInternalUser('teller', 'inactive_teller', 'inactive@bankmini.test', true, 'inactive');
+        $this->createCustomerWithAccount('inactive_cust@bankmini.test', true, 'inactive');
 
         $this->post(route('password.email'), [
-            'email' => 'inactive@bankmini.test',
+            'email' => 'inactive_cust@bankmini.test',
         ]);
 
-        // No token issued for inactive user
-        $this->assertNull(DB::table('password_reset_tokens')->where('email', 'inactive@bankmini.test')->first());
+        // No token issued for inactive customer
+        $this->assertNull(DB::table('customer_password_reset_tokens')->where('email', 'inactive_cust@bankmini.test')->first());
     }
 
     /**
@@ -428,5 +458,71 @@ class PasswordResetTest extends TestCase
         $this->actingAs($customer->customerAccount, 'customer_web')
             ->post(route('admin.customers.reset-password', $customer))
             ->assertStatus(403);
+    }
+
+    /**
+     * Skenario 15: Pengguna tanpa izin tidak dapat mereset password staf internal melalui endpoint Admin.
+     */
+    public function test_unauthorized_users_cannot_access_admin_user_reset_endpoint(): void
+    {
+        $targetUser = $this->createInternalUser('teller', 'target_teller');
+        $teller = $this->createInternalUser('teller', 'teller_unauth');
+        $supervisor = $this->createInternalUser('supervisor', 'spv_unauth');
+        $customer = $this->createCustomerWithAccount();
+
+        // 1. Guest
+        $this->post(route('admin.users.reset-password', $targetUser))
+            ->assertRedirect(route('login'));
+
+        // 2. Teller
+        $this->actingAs($teller, 'web')
+            ->post(route('admin.users.reset-password', $targetUser))
+            ->assertStatus(403);
+
+        // 3. Supervisor
+        $this->actingAs($supervisor, 'web')
+            ->post(route('admin.users.reset-password', $targetUser))
+            ->assertStatus(403);
+
+        // 4. Customer
+        $this->actingAs($customer->customerAccount, 'customer_web')
+            ->post(route('admin.users.reset-password', $targetUser))
+            ->assertStatus(403);
+    }
+
+    /**
+     * Skenario 16: Staf internal (Teller) dapat memperbarui password akunnya sendiri (FR-004).
+     */
+    public function test_staff_user_can_update_own_password(): void
+    {
+        $teller = $this->createInternalUser('teller', 'teller_change_pw');
+
+        $response = $this->actingAs($teller, 'web')
+            ->post(route('profile.password.update'), [
+                'current_password' => 'password123',
+                'password' => 'NewSecretPass123!',
+                'password_confirmation' => 'NewSecretPass123!',
+            ]);
+
+        $response->assertSessionHas('success');
+        $this->assertTrue(Hash::check('NewSecretPass123!', $teller->fresh()->password));
+    }
+
+    /**
+     * Skenario 17: Pembaruan password staf gagal jika password saat ini salah.
+     */
+    public function test_staff_user_fails_to_update_password_with_wrong_current_password(): void
+    {
+        $teller = $this->createInternalUser('teller', 'teller_wrong_pw');
+
+        $response = $this->actingAs($teller, 'web')
+            ->post(route('profile.password.update'), [
+                'current_password' => 'WrongPassword!',
+                'password' => 'NewSecretPass123!',
+                'password_confirmation' => 'NewSecretPass123!',
+            ]);
+
+        $response->assertSessionHasErrors('current_password');
+        $this->assertFalse(Hash::check('NewSecretPass123!', $teller->fresh()->password));
     }
 }

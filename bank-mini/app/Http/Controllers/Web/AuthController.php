@@ -50,6 +50,31 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Anda telah berhasil keluar.');
     }
 
+    /**
+     * Update authenticated staff user password (FR-004).
+     */
+    public function updatePassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password:web'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'current_password.required' => 'Password saat ini wajib diisi.',
+            'current_password.current_password' => 'Password saat ini tidak sesuai.',
+            'password.required' => 'Password baru wajib diisi.',
+            'password.min' => 'Password baru minimal 6 karakter.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+        ]);
+
+        /** @var \App\Models\User $user */
+        $user = auth()->guard('web')->user();
+        $user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make($request->input('password')),
+        ]);
+
+        return back()->with('success', 'Password akun Anda berhasil diperbarui!');
+    }
+
     protected function redirectBasedOnRole(string $role): RedirectResponse
     {
         return match ($role) {

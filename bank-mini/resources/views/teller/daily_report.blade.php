@@ -71,7 +71,7 @@
 
                 <!-- Physical Cash Verification Form -->
                 <form action="{{ route('teller.daily-report.store') }}" method="POST"
-                    class="space-y-4 pt-4 border-t border-slate-100">
+                    class="space-y-4 pt-4 border-t border-slate-100" onsubmit="return confirmSubmitDailyReport(event)">
                     @csrf
 
                     <div>
@@ -144,6 +144,16 @@
                 box.innerHTML = `<svg class="w-4 h-4 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                      <div><strong>Tidak Sesuai (Selisih: ${diffText})!</strong> Hasil perhitungan uang fisik belum sesuai.</div>`;
             }
+        }
+
+        function confirmSubmitDailyReport(e) {
+            const physicalCash = parseFloat(document.getElementById('physical_cash')?.value) || 0;
+            const formatted = new Intl.NumberFormat('id-ID').format(physicalCash);
+            if (!confirm(`Apakah Anda yakin ingin mengirim laporan penutupan kas harian sebesar Rp ${formatted} ke Supervisor?\n\nLaporan yang telah dikirim tidak dapat diubah kembali sampai diverifikasi.`)) {
+                if (e) e.preventDefault();
+                return false;
+            }
+            return true;
         }
 
         document.addEventListener('DOMContentLoaded', checkBalanceMatch);

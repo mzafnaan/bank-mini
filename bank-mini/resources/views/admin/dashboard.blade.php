@@ -176,7 +176,7 @@
         <div class="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
             <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Rekening Aktif</div>
             <div class="text-2xl font-bold text-slate-900">{{ number_format($stats['total_accounts']) }}</div>
-            <div class="text-xs text-slate-400 mt-1">Rekening bank mini</div>
+            <div class="text-xs text-slate-400 mt-1">Dari {{ number_format($stats['total_all_accounts']) }} total rekening</div>
         </div>
 
         <!-- Total Balance -->
@@ -198,12 +198,12 @@
             <table class="w-full text-left text-sm text-slate-600">
                 <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-3">Waktu</th>
-                        <th class="px-6 py-3">ID Transaksi</th>
-                        <th class="px-6 py-3">Nasabah</th>
-                        <th class="px-6 py-3">Kode Akun</th>
-                        <th class="px-6 py-3">Tipe</th>
-                        <th class="px-6 py-3 text-right">Jumlah</th>
+                        <th class="px-6 py-3 whitespace-nowrap">Waktu</th>
+                        <th class="px-6 py-3 whitespace-nowrap">ID Transaksi</th>
+                        <th class="px-6 py-3 whitespace-nowrap">Nasabah</th>
+                        <th class="px-6 py-3 whitespace-nowrap">Akun Pembukuan</th>
+                        <th class="px-6 py-3 whitespace-nowrap">Posisi</th>
+                        <th class="px-6 py-3 text-right whitespace-nowrap">Jumlah</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -212,23 +212,40 @@
                             <td class="px-6 py-3.5 whitespace-nowrap text-slate-500 text-sm">
                                 {{ $journal->created_at ? $journal->created_at->format('d/m/Y H:i') : '-' }}
                             </td>
-                            <td class="px-6 py-3.5 font-medium text-slate-900">
+                            <td class="px-6 py-3.5 font-medium text-slate-900 whitespace-nowrap">
                                 TRX-{{ str_pad($journal->transaction_id, 6, '0', STR_PAD_LEFT) }}
                             </td>
-                            <td class="px-6 py-3.5">
-                                {{ $journal->transaction?->bankAccount?->customer?->name ?? 'N/A' }}
+                            <td class="px-6 py-3.5 whitespace-nowrap">
+                                <span class="font-semibold text-slate-900 block">{{ $journal->transaction?->bankAccount?->customer?->name ?? 'N/A' }}</span>
+                                <span class="text-xs text-blue-600 block">Rek: {{ $journal->transaction?->bankAccount?->account_number ?? '-' }}</span>
                             </td>
-                            <td class="px-6 py-3.5">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
-                                    {{ $journal->account_code }}
-                                </span>
+                            <td class="px-6 py-3.5 whitespace-nowrap">
+                                @if($journal->account_code == '101')
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 text-xs font-bold rounded bg-slate-100 text-slate-800 border border-slate-200">101</span>
+                                        <span class="text-xs font-semibold text-slate-900">Kas Tunai</span>
+                                    </div>
+                                @elseif($journal->account_code == '201')
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-2 py-0.5 text-xs font-bold rounded bg-slate-100 text-slate-800 border border-slate-200">201</span>
+                                        <span class="text-xs font-semibold text-slate-900">Simpanan Nasabah</span>
+                                    </div>
+                                @else
+                                    <span class="px-2 py-0.5 text-xs font-bold rounded bg-slate-100 text-slate-800 border border-slate-200">{{ $journal->account_code }}</span>
+                                @endif
                             </td>
-                            <td class="px-6 py-3.5 capitalize">
-                                <span class="px-2 py-0.5 text-xs font-medium rounded {{ $journal->type === 'debit' ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-700' }}">
-                                    {{ $journal->type }}
-                                </span>
+                            <td class="px-6 py-3.5 whitespace-nowrap">
+                                @if($journal->type === 'debit')
+                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-blue-50 text-blue-700 border border-blue-200">
+                                        DEBIT
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 text-xs font-semibold rounded bg-amber-50 text-amber-700 border border-amber-200">
+                                        KREDIT
+                                    </span>
+                                @endif
                             </td>
-                            <td class="px-6 py-3.5 text-right font-medium text-slate-900">
+                            <td class="px-6 py-3.5 text-right font-medium text-slate-900 whitespace-nowrap">
                                 Rp {{ number_format($journal->amount, 0, ',', '.') }}
                             </td>
                         </tr>

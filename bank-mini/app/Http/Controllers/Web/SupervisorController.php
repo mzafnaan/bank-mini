@@ -98,4 +98,56 @@ class SupervisorController extends Controller
 
         return view('supervisor.journals', compact('journals', 'search'));
     }
+
+    /**
+     * Transaction Report (Daily, Weekly, Monthly) View.
+     */
+    public function transactionsReport(Request $request): View
+    {
+        $period = $request->input('period', 'daily');
+        $date = $request->input('date');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $type = $request->input('type');
+
+        $reportData = $this->supervisorService->getTransactionReport(
+            $period,
+            $date,
+            $startDate,
+            $endDate,
+            $month,
+            $year,
+            $type
+        );
+
+        return view('supervisor.transactions_report', $reportData);
+    }
+
+    /**
+     * Printable Transaction Report View.
+     */
+    public function printTransactionsReport(Request $request): View
+    {
+        $period = $request->input('period', 'daily');
+        $date = $request->input('date');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $month = $request->input('month');
+        $year = $request->input('year');
+        $type = $request->input('type');
+
+        $reportData = $this->supervisorService->getTransactionReport(
+            $period,
+            $date,
+            $startDate,
+            $endDate,
+            $month,
+            $year,
+            $type
+        );
+
+        return view('supervisor.print_transactions_report', $reportData);
+    }
 }

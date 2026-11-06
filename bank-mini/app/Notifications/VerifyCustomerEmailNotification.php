@@ -3,13 +3,12 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class VerifyCustomerEmailNotification extends Notification
 {
-    use Queueable;
-
     public function __construct(
         public string $verificationUrl,
         public string $customerName
@@ -33,6 +32,10 @@ class VerifyCustomerEmailNotification extends Notification
         return (new MailMessage)
             ->subject('Verifikasi Alamat Email - Bank Mini')
             ->view('emails.verify-customer-email', [
+                'verificationUrl' => $this->verificationUrl,
+                'customerName' => $this->customerName,
+            ])
+            ->text('emails.verify-customer-email-text', [
                 'verificationUrl' => $this->verificationUrl,
                 'customerName' => $this->customerName,
             ]);

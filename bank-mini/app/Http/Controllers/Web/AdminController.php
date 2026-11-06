@@ -11,6 +11,7 @@ use App\Models\BankAccount;
 use App\Models\Customer;
 use App\Models\JournalEntry;
 use App\Models\User;
+use App\Notifications\VerifyCustomerEmailNotification;
 use App\Services\AuthService;
 use App\Services\BankAccountService;
 use App\Services\CustomerService;
@@ -18,6 +19,8 @@ use App\Services\JournalService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -40,7 +43,8 @@ class AdminController extends Controller
         $stats = [
             'total_users' => User::count(),
             'total_customers' => Customer::count(),
-            'total_accounts' => BankAccount::count(),
+            'total_accounts' => BankAccount::where('status', 'active')->count(),
+            'total_all_accounts' => BankAccount::count(),
             'total_balance' => BankAccount::sum('balance'),
         ];
 
@@ -80,14 +84,46 @@ class AdminController extends Controller
 
     public function updateUser(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        $this->userService->updateUser($user, $request->validated());
+        $data = $request->validated();
+        if ($user->id === auth()->id() && ($data['status'] ?? null) === 'inactive') {
+            return back()->withInput()->with('error', 'Anda tidak dapat menonaktifkan akun Anda sendiri.');
+        }
+
+        $this->userService->updateUser($user, $data);
         return redirect()->route('admin.users')->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
     public function toggleUserStatus(User $user): RedirectResponse
     {
+        if ($user->id === auth()->id()) {
+            return redirect()->route('admin.users')->with('error', 'Anda tidak dapat menonaktifkan akun Anda sendiri.');
+        }
+
         $this->userService->toggleStatus($user);
         return redirect()->route('admin.users')->with('success', 'Status akun pengguna berhasil diperbarui.');
+    }
+
+    /**
+     * Admin-initiated password reset for internal users (staff).
+     * Generates a secure random temporary password and revokes any active tokens.
+     */
+    public function resetUserPassword(User $user): RedirectResponse
+    {
+        try {
+            $temporaryPassword = $this->authService->adminResetUserPassword($user);
+
+            return redirect()->route('admin.users')->with([
+                'success' => "Password pengguna '{$user->name}' berhasil direset.",
+                'reset_password_credentials' => [
+                    'name' => $user->name,
+                    'username' => $user->username,
+                    'role' => $user->role,
+                    'password' => $temporaryPassword,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     /**
@@ -97,23 +133,38 @@ class AdminController extends Controller
     {
         $search = trim($request->input('search', ''));
         $customers = $this->customerService->getAllCustomers($search);
-        return view('admin.customers', compact('customers', 'search'));
+        $tellers = User::where('role', 'teller')->where('status', 'active')->orderBy('name')->get();
+
+        return view('admin.customers', compact('customers', 'search', 'tellers'));
     }
 
     public function storeCustomer(StoreCustomerRequest $request): RedirectResponse
     {
         try {
             $customer = $this->customerService->createCustomer($request->validated());
-            return redirect()->route('admin.customers')->with([
-                'success' => "Nasabah '{$customer->name}' berhasil didaftarkan.",
+            $emailWarning = null;
+            if ($customer->pending_email) {
+                try {
+                    $this->sendCustomerEmailVerification($customer);
+                } catch (\Throwable) {
+                    $emailWarning = 'Nasabah berhasil didaftarkan, tetapi email verifikasi gagal dikirim. Periksa konfigurasi email, lalu minta nasabah mengirim ulang tautan dari dashboard.';
+                }
+            }
+
+            $response = redirect()->route('admin.customers')->with([
+                'success' => $customer->pending_email
+                    ? "Nasabah '{$customer->name}' berhasil didaftarkan. Email pemulihan baru aktif setelah diverifikasi."
+                    : "Nasabah '{$customer->name}' berhasil didaftarkan.",
                 'new_customer_credentials' => [
                     'name' => $customer->name,
                     'account_number' => $customer->bankAccount->account_number ?? '-',
+                    'balance' => $customer->bankAccount->balance ?? 0,
                     'username' => $customer->customerAccount->username ?? strtolower($customer->nis),
                     'password' => $customer->plain_password ?? ('Bk' . $customer->nis . '!'),
                     'pin' => $customer->plain_pin ?? substr(str_pad((string) abs(crc32($customer->nis)), 6, '0', STR_PAD_LEFT), 0, 6),
                 ],
             ]);
+            return $emailWarning ? $response->with('error', $emailWarning) : $response;
         } catch (\Exception $e) {
             return back()->withInput()->withErrors(['error' => 'Gagal mendaftarkan nasabah: ' . $e->getMessage()]);
         }
@@ -122,7 +173,34 @@ class AdminController extends Controller
     public function updateCustomer(UpdateCustomerRequest $request, Customer $customer): RedirectResponse
     {
         $this->customerService->updateCustomer($customer, $request->validated());
-        return redirect()->route('admin.customers')->with('success', 'Data nasabah berhasil diperbarui.');
+        $emailChangedToPending = $customer->wasChanged('pending_email') && $customer->pending_email;
+        $emailWarning = null;
+        if ($emailChangedToPending) {
+            try {
+                $this->sendCustomerEmailVerification($customer);
+            } catch (\Throwable) {
+                $emailWarning = 'Data nasabah diperbarui, tetapi email verifikasi gagal dikirim. Periksa konfigurasi email, lalu minta nasabah mengirim ulang tautan dari dashboard.';
+            }
+        }
+
+        $message = $emailChangedToPending
+            ? 'Data nasabah diperbarui. Email pemulihan baru aktif setelah diverifikasi.'
+            : 'Data nasabah berhasil diperbarui.';
+        $response = redirect()->route('admin.customers')->with('success', $message);
+        return $emailWarning ? $response->with('error', $emailWarning) : $response;
+    }
+
+    private function sendCustomerEmailVerification(Customer $customer): void
+    {
+        $email = $customer->pending_email;
+        $verificationUrl = URL::temporarySignedRoute(
+            'customer.email.verify',
+            now()->addMinutes(60),
+            ['customer' => $customer->id, 'email' => $email]
+        );
+
+        Notification::route('mail', $email)
+            ->notify(new VerifyCustomerEmailNotification($verificationUrl, $customer->name));
     }
 
     /**

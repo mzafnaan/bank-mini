@@ -10,6 +10,9 @@ class Customer extends Model
 {
     use HasFactory;
 
+    public ?string $plain_password = null;
+    public ?string $plain_pin = null;
+
     protected $fillable = [
         'nis',
         'name',

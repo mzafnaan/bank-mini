@@ -40,13 +40,15 @@ class PasswordResetController extends Controller
     {
         $email = $request->validated('email');
 
-        // 1. Try internal user first
+        // 1. Internal users (staff) cannot reset password via email; only Admin can reset them.
         $user = User::where('email', $email)->first();
         if ($user) {
-            return $this->sendResetLinkForUser($user, $email);
+            return back()->withErrors([
+                'email' => 'Reset password untuk akun pengguna internal (staf) hanya dapat dilakukan oleh Administrator. Silakan hubungi Administrator.',
+            ]);
         }
 
-        // 2. Try customer account (email is on customers table)
+        // 2. Customer account (email is on customers table)
         $customer = Customer::where('email', $email)->first();
         if ($customer && $customer->customerAccount) {
             return $this->sendResetLinkForCustomer($customer, $email);
@@ -122,10 +124,12 @@ class PasswordResetController extends Controller
     {
         $email = $request->validated('email');
 
-        // 1. Try internal user reset
+        // 1. Internal users cannot reset password via email link
         $user = User::where('email', $email)->first();
         if ($user) {
-            return $this->resetUserPassword($request);
+            return back()->withErrors([
+                'email' => 'Reset password untuk akun pengguna internal (staf) hanya dapat dilakukan oleh Administrator. Silakan hubungi Administrator.',
+            ]);
         }
 
         // 2. Try customer account reset

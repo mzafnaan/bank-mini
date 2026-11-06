@@ -38,6 +38,9 @@ class ResetPasswordNotification extends Notification
             ->subject('Reset Password - Bank Mini')
             ->view('emails.reset-password', [
                 'resetUrl' => $resetUrl,
+            ])
+            ->text('emails.reset-password-text', [
+                'resetUrl' => $resetUrl,
             ]);
     }
 }

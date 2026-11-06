@@ -40,7 +40,7 @@
                     <th class="px-6 py-3">Kelas</th>
                     <th class="px-6 py-3">Saldo</th>
                     <th class="px-6 py-3">Status</th>
-                    <th class="px-6 py-3 text-right">Aksi</th>
+                    <th class="px-6 py-3 text-right whitespace-nowrap">Aksi</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -65,25 +65,27 @@
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-500">Nonaktif</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 text-right space-x-2">
-                            <button onclick="showAccountDetail({{ json_encode($account->load('customer')) }})"
-                                class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition">
-                                Detail & QR
-                            </button>
+                        <td class="px-6 py-4 text-right whitespace-nowrap">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <button onclick="showAccountDetail({{ json_encode($account->load('customer')) }})"
+                                    class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition whitespace-nowrap">
+                                    Detail & QR
+                                </button>
 
-                            @if($account->status === 'active')
-                                <button type="button"
-                                    onclick="confirmToggleStatus('{{ $account->id }}', '{{ $account->account_number }}', '{{ addslashes($account->customer?->name ?? '-') }}', 'inactive')"
-                                    class="px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 rounded hover:bg-slate-200 transition">
-                                    Nonaktifkan
-                                </button>
-                            @else
-                                <button type="button"
-                                    onclick="confirmToggleStatus('{{ $account->id }}', '{{ $account->account_number }}', '{{ addslashes($account->customer?->name ?? '-') }}', 'active')"
-                                    class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition">
-                                    Aktifkan
-                                </button>
-                            @endif
+                                @if($account->status === 'active')
+                                    <button type="button"
+                                        onclick="confirmToggleStatus('{{ $account->id }}', '{{ $account->account_number }}', '{{ addslashes($account->customer?->name ?? '-') }}', 'inactive')"
+                                        class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 rounded hover:bg-slate-200 transition whitespace-nowrap">
+                                        Nonaktifkan
+                                    </button>
+                                @else
+                                    <button type="button"
+                                        onclick="confirmToggleStatus('{{ $account->id }}', '{{ $account->account_number }}', '{{ addslashes($account->customer?->name ?? '-') }}', 'active')"
+                                        class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-emerald-600 hover:text-emerald-800 bg-emerald-50 rounded hover:bg-emerald-100 transition whitespace-nowrap">
+                                        Aktifkan
+                                    </button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @empty
@@ -94,6 +96,11 @@
             </tbody>
         </table>
         </div>
+        @if($accounts->hasPages())
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
+                {{ $accounts->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- Modal Konfirmasi Status Rekening -->

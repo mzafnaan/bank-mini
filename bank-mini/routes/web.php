@@ -27,6 +27,11 @@ Route::middleware(['auth:customer_web'])->group(function () {
     Route::post('/force-change-password', [PasswordResetController::class, 'forceChangePassword'])->name('password.force-change.update');
 });
 
+// Staff Password Update (FR-004: Administrator, Teller, Supervisor)
+Route::middleware(['auth:web'])->group(function () {
+    Route::post('/profile/password', [AuthController::class, 'updatePassword'])->name('profile.password.update');
+});
+
 // Administrator Routes
 Route::middleware(['auth:web', 'role:administrator'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
@@ -36,6 +41,7 @@ Route::middleware(['auth:web', 'role:administrator'])->prefix('admin')->name('ad
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
     Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::patch('/users/{user}/status', [AdminController::class, 'toggleUserStatus'])->name('users.toggle-status');
+    Route::post('/users/{user}/reset-password', [AdminController::class, 'resetUserPassword'])->name('users.reset-password');
 
     // Customer Onboarding & Management
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
@@ -59,8 +65,10 @@ use App\Http\Controllers\Web\TellerController;
 Route::middleware(['auth:web', 'role:teller'])->prefix('teller')->name('teller.')->group(function () {
     Route::get('/dashboard', [TellerController::class, 'dashboard'])->name('dashboard');
 
-    // Customer / Account Identification
-    Route::get('/identification', [TellerController::class, 'identification'])->name('identification');
+    // Customer / Account Identification (Redirected to Dashboard)
+    Route::get('/identification', function (\Illuminate\Http\Request $request) {
+        return redirect()->route('teller.dashboard', $request->query());
+    })->name('identification');
 
     // Cash Deposit
     Route::get('/deposit', [TellerController::class, 'depositForm'])->name('deposit');
@@ -70,6 +78,8 @@ Route::middleware(['auth:web', 'role:teller'])->prefix('teller')->name('teller.'
     Route::get('/withdrawal', [TellerController::class, 'withdrawalForm'])->name('withdrawal');
     Route::post('/withdrawal', [TellerController::class, 'storeWithdrawal'])->name('withdrawal.store');
     Route::post('/withdrawal-request', [TellerController::class, 'storeWithdrawalRequest'])->name('withdrawal.request');
+    Route::get('/withdrawal-requests/{withdrawalRequest}/status', [TellerController::class, 'checkWithdrawalStatus'])->name('withdrawal.status');
+    Route::post('/withdrawal-requests/{withdrawalRequest}/cancel', [TellerController::class, 'cancelWithdrawalRequest'])->name('withdrawal.cancel');
 
     // Teller Transaction History & Receipts
     Route::get('/transactions', [TellerController::class, 'transactions'])->name('transactions');
@@ -90,6 +100,8 @@ Route::middleware(['auth:web', 'role:supervisor'])->prefix('supervisor')->name('
     Route::post('/reports/{dailyReport}/approve', [SupervisorController::class, 'approveReport'])->name('reports.approve');
     Route::post('/reports/{dailyReport}/reject', [SupervisorController::class, 'rejectReport'])->name('reports.reject');
     Route::get('/journals', [SupervisorController::class, 'journals'])->name('journals');
+    Route::get('/transactions-report', [SupervisorController::class, 'transactionsReport'])->name('transactions.report');
+    Route::get('/transactions-report/print', [SupervisorController::class, 'printTransactionsReport'])->name('transactions.report.print');
 });
 
 use App\Http\Controllers\Web\CustomerController;
@@ -102,6 +114,7 @@ Route::middleware(['auth:web,customer_web', 'role:customer'])->prefix('customer'
     Route::get('/security', [CustomerController::class, 'security'])->name('security');
     Route::post('/security/password', [CustomerController::class, 'updatePassword'])->name('security.password');
     Route::post('/security/pin', [CustomerController::class, 'updatePin'])->name('security.pin');
+    Route::post('/security/reset-pin', [CustomerController::class, 'resetPinWithPassword'])->name('security.reset-pin');
 
     // Customer Recovery Email Management
     Route::post('/security/email', [CustomerController::class, 'requestEmailVerification'])->name('security.email');

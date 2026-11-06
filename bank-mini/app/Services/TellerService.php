@@ -345,6 +345,6 @@ class TellerService
             $query->whereDate('created_at', $date);
         }
 
-        return $query->paginate(15);
+        return $query->paginate(25);
     }
 }

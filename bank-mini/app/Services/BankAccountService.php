@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Models\BankAccount;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class BankAccountService
 {
-    public function getAllAccounts(?string $search = null): Collection
+    public function getAllAccounts(?string $search = null, int $perPage = 25): LengthAwarePaginator
     {
         $query = BankAccount::with(['customer.customerAccount'])->orderBy('account_number', 'asc');
 
@@ -21,7 +21,7 @@ class BankAccountService
             });
         }
 
-        return $query->get();
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function generateAccountNumber(string $major): string

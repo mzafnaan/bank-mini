@@ -33,8 +33,7 @@
                         <th class="px-6 py-3">Telepon</th>
                         <th class="px-6 py-3">Email</th>
                         <th class="px-6 py-3">Nomor Rekening</th>
-                        <th class="px-6 py-3">Status Akun Login</th>
-                        <th class="px-6 py-3 text-right">Aksi</th>
+                        <th class="px-6 py-3 text-right whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -44,7 +43,14 @@
                             <td class="px-6 py-4 font-semibold text-slate-900">{{ $customer->name }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ $customer->class }}</td>
                             <td class="px-6 py-4 text-slate-600">{{ $customer->phone ?? '-' }}</td>
-                            <td class="px-6 py-4 text-slate-600">{{ $customer->email ?? '-' }}</td>
+                            <td class="px-6 py-4 text-slate-600">
+                                @if($customer->pending_email)
+                                    {{ $customer->pending_email }}
+                                    <span class="block text-xs text-amber-600">Menunggu verifikasi</span>
+                                @else
+                                    {{ $customer->email ?? '-' }}
+                                @endif
+                            </td>
                             <td class="px-6 py-4">
                                 @if($customer->bankAccount)
                                     <span class="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-blue-50 text-blue-700">
@@ -54,26 +60,17 @@
                                     <span class="text-xs text-slate-400 italic">Belum ada</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
-                                @if($customer->customerAccount)
-                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                        Aktif ({{ $customer->customerAccount->username }})
-                                    </span>
-                                @else
-                                    <span class="text-xs text-slate-400 italic">Belum ada</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-6 py-4 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button onclick="editCustomer({{ json_encode($customer) }})"
-                                        class="px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition">
+                                        class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition whitespace-nowrap">
                                         Edit
                                     </button>
                                     @if($customer->customerAccount)
-                                        <form action="{{ route('admin.customers.reset-password', $customer) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin mereset password akun {{ $customer->name }}? Password acak sementara akan dibuat dan nasabah wajib mengubahnya saat login.')">
+                                        <form action="{{ route('admin.customers.reset-password', $customer) }}" method="POST" class="inline-flex" onsubmit="return confirm('Apakah Anda yakin ingin mereset password akun {{ $customer->name }}? Password acak sementara akan dibuat dan nasabah wajib mengubahnya saat login.')">
                                             @csrf
                                             <button type="submit"
-                                                class="px-2.5 py-1 text-xs font-medium text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded transition"
+                                                class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100 rounded transition whitespace-nowrap"
                                                 title="Reset password nasabah ke password sementara acak">
                                                 Reset PW
                                             </button>
@@ -84,12 +81,17 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-6 text-center text-slate-400">Belum ada data nasabah.</td>
+                            <td colspan="7" class="px-6 py-6 text-center text-slate-400">Belum ada data nasabah.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
+        @if($customers->hasPages())
+            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
+                {{ $customers->links() }}
+            </div>
+        @endif
     </div>
 
     <!-- Modal Add Customer -->
@@ -137,9 +139,19 @@
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email (Opsional, untuk Reset Password)</label>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email</label>
                     <input type="email" name="email" placeholder="siswa@sekolah.sch.id" 
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Setoran Awal (Minimal Rp 10.000) *</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-sm font-semibold text-slate-500">Rp</span>
+                        <input type="number" name="initial_deposit" id="add_customer_deposit" required min="10000" step="1000"
+                            placeholder="Contoh: 10000" value="{{ old('initial_deposit') }}"
+                            class="w-full pl-10 pr-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600">
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-1">Sesuai aturan saldo minimum, setoran awal minimal Rp 10.000 untuk dapat membuka rekening.</p>
                 </div>
                 
                 <div class="pt-2 flex justify-end gap-2">
@@ -212,7 +224,7 @@
             document.getElementById('edit_name').value = customer.name;
             document.getElementById('edit_class').value = customer.class;
             document.getElementById('edit_phone').value = customer.phone || '';
-            document.getElementById('edit_email').value = customer.email || '';
+            document.getElementById('edit_email').value = customer.pending_email || customer.email || '';
             document.getElementById('modalEditCustomer').classList.remove('hidden');
         }
 
@@ -271,11 +283,23 @@
                     <div class="bg-slate-50 rounded-xl p-4 border border-slate-200/80">
                         <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Nama Nasabah</div>
                         <div class="text-base font-bold text-slate-900 mt-0.5">{{ session('new_customer_credentials')['name'] }}</div>
-                        <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-3">Nomor Rekening</div>
-                        <div class="mt-1">
-                            <span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-mono">
-                                {{ session('new_customer_credentials')['account_number'] }}
-                            </span>
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Nomor Rekening</div>
+                                <div class="mt-1">
+                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 border border-blue-200 font-mono">
+                                        {{ session('new_customer_credentials')['account_number'] }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Setoran Awal</div>
+                                <div class="mt-1">
+                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
+                                        Rp {{ number_format(session('new_customer_credentials')['balance'] ?? 0, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -384,7 +408,7 @@
                         <!-- Temporary Password -->
                         <div class="flex items-center justify-between p-3 bg-amber-50/60 rounded-xl border border-amber-200">
                             <div>
-                                <span class="text-[10px] font-semibold text-amber-800 uppercase tracking-wider block">Password Acak Sementara</span>
+                                <span class="text-[10px] font-semibold text-amber-800 uppercase tracking-wider block">Password Sementara</span>
                                 <span class="text-sm font-bold text-amber-950 mt-0.5 block font-mono" id="reset-cred-password">{{ session('reset_password_credentials')['password'] }}</span>
                             </div>
                             <button type="button" onclick="copyCred('reset-cred-password', this)" class="px-3 py-1.5 text-xs font-medium text-amber-800 hover:text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded-lg transition shadow-sm">

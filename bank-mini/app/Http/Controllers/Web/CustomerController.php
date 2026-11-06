@@ -125,7 +125,7 @@ class CustomerController extends Controller
             $query->whereDate('created_at', '<=', $endDate);
         }
 
-        $transactions = $query->paginate(10)->withQueryString();
+        $transactions = $query->paginate(25)->withQueryString();
 
         return view('customer.transactions', compact(
             'customer',
@@ -211,6 +211,37 @@ class CustomerController extends Controller
             return back()->with('success', 'PIN otorisasi transaksi Anda berhasil diperbarui.');
         } catch (Exception $e) {
             return back()->withErrors(['current_pin' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Handle Customer PIN Reset via Account Password Verification.
+     */
+    public function resetPinWithPassword(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'password' => ['required', 'string'],
+            'new_pin' => ['required', 'string', 'digits:6', 'confirmed'],
+        ], [
+            'password.required' => 'Password akun wajib dimasukkan.',
+            'new_pin.required' => 'PIN baru 6 digit wajib dimasukkan.',
+            'new_pin.digits' => 'PIN baru harus terdiri dari 6 digit angka.',
+            'new_pin.confirmed' => 'Konfirmasi PIN baru tidak cocok.',
+        ]);
+
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+
+        try {
+            $this->authService->resetPinWithPassword(
+                $customerAccount,
+                $request->input('password'),
+                $request->input('new_pin')
+            );
+
+            return back()->with('success', 'PIN otorisasi transaksi berhasil diperbarui menggunakan verifikasi password akun.');
+        } catch (Exception $e) {
+            return back()->withErrors(['pin_password' => $e->getMessage()]);
         }
     }
 

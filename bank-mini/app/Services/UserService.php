@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
-    public function getAllUsers(?string $search = null): Collection
+    public function getAllUsers(?string $search = null, int $perPage = 25): LengthAwarePaginator
     {
         $query = User::orderBy('name', 'asc');
 
@@ -20,7 +20,7 @@ class UserService
             });
         }
 
-        return $query->get();
+        return $query->paginate($perPage)->withQueryString();
     }
 
     public function createUser(array $data): User
@@ -64,6 +64,10 @@ class UserService
 
     public function toggleStatus(User $user): bool
     {
+        if (auth()->check() && $user->id === auth()->id() && $user->status === 'active') {
+            throw new \Exception('Anda tidak dapat menonaktifkan akun Anda sendiri.');
+        }
+
         $newStatus = $user->status === 'active' ? 'inactive' : 'active';
         return $user->update(['status' => $newStatus]);
     }

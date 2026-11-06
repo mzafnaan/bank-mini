@@ -5,7 +5,10 @@ namespace App\Services;
 use App\Models\BankAccount;
 use App\Models\Customer;
 use App\Models\CustomerAccount;
-use Illuminate\Database\Eloquent\Collection;
+use App\Models\JournalEntry;
+use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +20,7 @@ class CustomerService
         $this->bankAccountService = $bankAccountService ?? app(BankAccountService::class);
     }
 
-    public function getAllCustomers(?string $search = null): Collection
+    public function getAllCustomers(?string $search = null, int $perPage = 25): LengthAwarePaginator
     {
         $query = Customer::with(['bankAccount', 'customerAccount'])->orderBy('name', 'asc');
 
@@ -32,7 +35,7 @@ class CustomerService
             });
         }
 
-        return $query->get();
+        return $query->paginate($perPage)->withQueryString();
     }
 
     /**
@@ -48,8 +51,9 @@ class CustomerService
                 'name' => trim($data['name']),
                 'class' => trim($data['class']),
                 'phone' => ! empty($data['phone']) ? trim($data['phone']) : null,
-                'email' => ! empty($data['email']) ? trim($data['email']) : null,
-                'email_verified_at' => ! empty($data['email']) ? now() : null,
+                'email' => null,
+                'email_verified_at' => null,
+                'pending_email' => ! empty($data['email']) ? strtolower(trim($data['email'])) : null,
             ]);
 
             // Determine Major Code (AK, BR, BD, MP, DKV, RPL, TKJ)
@@ -64,17 +68,50 @@ class CustomerService
                 }
             }
 
-            // 2. Auto-generate Bank Account [KODE JURUSAN]-[NOMOR URUT 3 DIGIT] (Balance strictly 0, status active)
+            // 2. Auto-generate Bank Account [KODE JURUSAN]-[NOMOR URUT 3 DIGIT]
             $accountNumber = $this->bankAccountService->generateAccountNumber($major);
             $qrCode = $accountNumber;
+            $initialDeposit = ! empty($data['initial_deposit']) ? (float) $data['initial_deposit'] : 0;
 
-            BankAccount::create([
+            $bankAccount = BankAccount::create([
                 'customer_id' => $customer->id,
                 'account_number' => $accountNumber,
-                'balance' => 0,
+                'balance' => $initialDeposit,
                 'status' => 'active',
                 'qr_code' => $qrCode,
             ]);
+
+            // If initial deposit is provided, record deposit transaction and journal entries
+            if ($initialDeposit > 0) {
+                // Cash deposit must be attributed to an operational Teller cash drawer (BR-011, BR-048)
+                $tellerId = ! empty($data['teller_id'])
+                    ? (int) $data['teller_id']
+                    : (User::where('role', 'teller')->where('status', 'active')->orderBy('id')->value('id')
+                        ?? User::where('role', 'teller')->orderBy('id')->value('id')
+                        ?? (auth()->id() ?? User::where('role', 'administrator')->value('id') ?? 1));
+
+                $transaction = Transaction::create([
+                    'bank_account_id' => $bankAccount->id,
+                    'teller_id' => $tellerId,
+                    'type' => 'deposit',
+                    'amount' => $initialDeposit,
+                ]);
+
+                // Journal: Debit Kas (101), Credit Tabungan Nasabah (201)
+                JournalEntry::create([
+                    'transaction_id' => $transaction->id,
+                    'account_code' => '101',
+                    'type' => 'debit',
+                    'amount' => $initialDeposit,
+                ]);
+
+                JournalEntry::create([
+                    'transaction_id' => $transaction->id,
+                    'account_code' => '201',
+                    'type' => 'credit',
+                    'amount' => $initialDeposit,
+                ]);
+            }
 
             // 3. Auto-create Customer Account for Web & Mobile API Login
             $username = strtolower(trim($customer->nis));
@@ -110,12 +147,17 @@ class CustomerService
         ];
 
         if (array_key_exists('email', $data)) {
-            $newEmail = ! empty($data['email']) ? trim($data['email']) : null;
-            $updateData['email'] = $newEmail;
-            if ($newEmail && $newEmail !== $customer->email) {
-                $updateData['email_verified_at'] = now();
-            } elseif (! $newEmail) {
+            $newEmail = ! empty($data['email']) ? strtolower(trim($data['email'])) : null;
+
+            if (! $newEmail) {
+                $updateData['email'] = null;
                 $updateData['email_verified_at'] = null;
+                $updateData['pending_email'] = null;
+            } elseif (
+                $newEmail !== strtolower((string) $customer->email)
+                || ! $customer->email_verified_at
+            ) {
+                $updateData['pending_email'] = $newEmail;
             }
         }
 

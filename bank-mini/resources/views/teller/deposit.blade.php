@@ -12,7 +12,7 @@
         
         <!-- Main Form -->
         <div class="lg:col-span-2 bg-white rounded-lg border border-slate-200 shadow-sm p-6">
-            <form action="{{ route('teller.deposit.store') }}" method="POST" class="space-y-5">
+            <form action="{{ route('teller.deposit.store') }}" method="POST" class="space-y-5" onsubmit="return confirmDeposit(event)">
                 @csrf
 
                 <!-- Account Identification -->
@@ -136,6 +136,29 @@
             if (acc) {
                 window.location.href = "{{ route('teller.deposit') }}?account_number=" + encodeURIComponent(acc);
             }
+        }
+
+        function confirmDeposit(e) {
+            const amountInput = document.getElementById('amount');
+            const amountVal = amountInput ? parseInt(amountInput.value || '0', 10) : 0;
+            const formattedAmount = new Intl.NumberFormat('id-ID').format(amountVal);
+            const accNum = document.getElementById('account_number')?.value || '';
+            const customerName = '{{ addslashes($account?->customer?->name ?? "") }}';
+            
+            let msg = `Apakah Anda yakin ingin memproses transaksi setoran tunai sebesar Rp ${formattedAmount}`;
+            if (accNum) {
+                msg += ` ke rekening ${accNum}`;
+            }
+            if (customerName) {
+                msg += ` atas nama ${customerName}`;
+            }
+            msg += `?\n\nPastikan uang fisik telah dihitung dan diterima secara tepat.`;
+
+            if (!confirm(msg)) {
+                if (e) e.preventDefault();
+                return false;
+            }
+            return true;
         }
     </script>
 @endsection

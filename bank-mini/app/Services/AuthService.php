@@ -52,7 +52,13 @@ class AuthService
      */
     public function loginApi(array $credentials): array
     {
-        $account = CustomerAccount::where('username', $credentials['username'])->first();
+        $identifier = trim($credentials['username']);
+
+        $account = CustomerAccount::where('username', $identifier)
+            ->orWhereHas('customer', function ($q) use ($identifier) {
+                $q->where('nis', $identifier);
+            })
+            ->first();
 
         if (! $account || ! Hash::check($credentials['password'], $account->password)) {
             throw new \Exception('Username atau password salah.');
@@ -136,6 +142,20 @@ class AuthService
     }
 
     /**
+     * Reset PIN using account password verification (BR: Lupa PIN nasabah).
+     */
+    public function resetPinWithPassword(CustomerAccount $customerAccount, string $password, string $newPin): bool
+    {
+        if (! Hash::check($password, $customerAccount->password)) {
+            throw new \Exception('Password akun yang Anda masukkan tidak sesuai.');
+        }
+
+        return $customerAccount->update([
+            'pin' => Hash::make($newPin),
+        ]);
+    }
+
+    /**
      * Reset password after token validation (used by Password Broker flow).
      * Revokes all Sanctum tokens for the account after password reset.
      */
@@ -155,6 +175,32 @@ class AuthService
         if (method_exists($user, 'tokens')) {
             $user->tokens()->delete();
         }
+    }
+
+    /**
+     * Admin-initiated password reset for internal users (staff).
+     * Generates a cryptographically secure random temporary password.
+     * Revokes all active Sanctum tokens.
+     *
+     * @return string The plaintext temporary password (display once, never log)
+     */
+    public function adminResetUserPassword(User $user): string
+    {
+        if ($user->status !== 'active') {
+            throw new \Exception('Tidak dapat mereset password akun pengguna yang tidak aktif.');
+        }
+
+        $temporaryPassword = $this->generateSecureTemporaryPassword();
+
+        $user->update([
+            'password' => Hash::make($temporaryPassword),
+        ]);
+
+        if (method_exists($user, 'tokens')) {
+            $user->tokens()->delete();
+        }
+
+        return $temporaryPassword;
     }
 
     /**

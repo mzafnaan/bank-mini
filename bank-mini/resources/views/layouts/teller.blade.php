@@ -55,14 +55,6 @@
                 <span>Dashboard</span>
             </a>
 
-            <a href="{{ route('teller.identification') }}"
-               class="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-medium transition {{ request()->routeIs('teller.identification') ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
-                </svg>
-                <span>Identifikasi Nasabah</span>
-            </a>
-
             <a href="{{ route('teller.deposit') }}"
                class="flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-medium transition {{ request()->routeIs('teller.deposit') ? 'bg-blue-50 text-blue-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -95,6 +87,14 @@
                 <span>Penutupan Kas</span>
             </a>
 
+            <button type="button" onclick="openStaffChangePasswordModal()"
+               class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-medium transition text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-left">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                <span>Ganti Password</span>
+            </button>
+
         </nav>
 
         <!-- Sidebar Footer: Profile & Logout -->
@@ -105,14 +105,22 @@
                     <span class="block text-xs text-blue-600 font-medium capitalize truncate">{{ auth()->user()->role }}</span>
                 </div>
                 
-                <form action="{{ route('logout') }}" method="POST" class="flex-shrink-0">
-                    @csrf
-                    <button type="submit" title="Keluar" class="p-2 text-slate-500 hover:text-red-600 hover:bg-white rounded-md transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="openStaffChangePasswordModal()" title="Ubah Password" class="p-2 text-slate-500 hover:text-blue-600 hover:bg-white rounded-md transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
                     </button>
-                </form>
+
+                    <form action="{{ route('logout') }}" method="POST" class="flex-shrink-0">
+                        @csrf
+                        <button type="submit" title="Keluar" class="p-2 text-slate-500 hover:text-red-600 hover:bg-white rounded-md transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
 
@@ -131,7 +139,7 @@
                     </svg>
                 </button>
 
-                <form action="{{ route('teller.identification') }}" method="GET" class="relative w-full flex items-center gap-2">
+                <form action="{{ route('teller.dashboard') }}" method="GET" class="relative w-full flex items-center gap-2">
                     <div class="relative flex-1">
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari NIS, Nama, Rekening, User... (Tekan Enter)"
                                class="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
@@ -139,7 +147,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         @if(request('search'))
-                            <a href="{{ route('teller.identification') }}" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs" title="Reset pencarian">&times;</a>
+                            <a href="{{ route('teller.dashboard') }}" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs" title="Reset pencarian">&times;</a>
                         @endif
                     </div>
                     <button type="submit" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition flex-shrink-0">
@@ -202,5 +210,6 @@
             }
         }
     </script>
+    @include('components.change-password-modal')
 </body>
 </html>
