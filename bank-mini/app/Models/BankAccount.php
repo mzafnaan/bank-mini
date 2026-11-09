@@ -33,8 +33,9 @@ class BankAccount extends Model
             return strtoupper($parts[0]);
         }
 
-        if ($this->customer && $this->customer->class) {
-            if (preg_match('/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i', $this->customer->class, $matches)) {
+        if ($this->customer) {
+            $classText = $this->customer->full_class ?: (string) $this->customer->class;
+            if (preg_match('/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i', $classText, $matches)) {
                 return strtoupper($matches[1]);
             }
         }

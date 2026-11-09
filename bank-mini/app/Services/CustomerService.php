@@ -22,13 +22,14 @@ class CustomerService
 
     public function getAllCustomers(?string $search = null, int $perPage = 25): LengthAwarePaginator
     {
-        $query = Customer::with(['bankAccount', 'customerAccount'])->orderBy('name', 'asc');
+        $query = Customer::with(['bankAccount', 'customerAccount', 'academicYear'])->orderBy('name', 'asc');
 
         if (! empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                   ->orWhere('nis', 'like', "%{$search}%")
                   ->orWhere('class', 'like', "%{$search}%")
+                  ->orWhere('class_group', 'like', "%{$search}%")
                   ->orWhere('phone', 'like', "%{$search}%")
                   ->orWhereHas('bankAccount', fn($bq) => $bq->where('account_number', 'like', "%{$search}%"))
                   ->orWhereHas('customerAccount', fn($cq) => $cq->where('username', 'like', "%{$search}%"));
@@ -45,23 +46,50 @@ class CustomerService
     public function createCustomer(array $data): Customer
     {
         return DB::transaction(function () use ($data) {
+            // Determine active academic year
+            $activeAcademicYearId = $data['academic_year_id'] ?? \App\Models\AcademicYear::where('is_active', true)->value('id');
+
+            // Parse class and class_group
+            $rawClass = trim($data['class']);
+            $class = $rawClass;
+            $classGroup = ! empty($data['class_group']) ? trim($data['class_group']) : null;
+            if (! $classGroup && preg_match('/^(X|XI|XII)\s+(.+)$/i', $rawClass, $matches)) {
+                $class = strtoupper($matches[1]);
+                $classGroup = trim($matches[2]);
+            }
+
             // 1. Create Customer identity record
             $customer = Customer::create([
                 'nis' => trim($data['nis']),
                 'name' => trim($data['name']),
-                'class' => trim($data['class']),
+                'class' => $class,
+                'class_group' => $classGroup,
+                'academic_year_id' => $activeAcademicYearId,
+                'status' => $data['status'] ?? 'active',
                 'phone' => ! empty($data['phone']) ? trim($data['phone']) : null,
                 'email' => null,
                 'email_verified_at' => null,
                 'pending_email' => ! empty($data['email']) ? strtolower(trim($data['email'])) : null,
             ]);
 
+            // Create initial customer class history if academic year is set
+            if ($customer->academic_year_id) {
+                \App\Models\CustomerClassHistory::firstOrCreate([
+                    'customer_id' => $customer->id,
+                    'academic_year_id' => $customer->academic_year_id,
+                ], [
+                    'class' => $customer->class,
+                    'class_group' => $customer->class_group,
+                ]);
+            }
+
             // Determine Major Code (AK, BR, BD, MP, DKV, RPL, TKJ)
             $major = ! empty($data['major']) ? strtoupper(trim($data['major'])) : null;
             $validMajors = ['AK', 'BR', 'BD', 'MP', 'DKV', 'RPL', 'TKJ'];
 
             if (! $major || ! in_array($major, $validMajors, true)) {
-                if (preg_match('/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i', $customer->class, $matches)) {
+                $combinedClass = trim($customer->class . ' ' . ($customer->class_group ?? ''));
+                if (preg_match('/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i', $combinedClass, $matches)) {
                     $major = strtoupper($matches[1]);
                 } else {
                     $major = 'RPL';
@@ -139,12 +167,29 @@ class CustomerService
 
     public function updateCustomer(Customer $customer, array $data): bool
     {
+        $rawClass = trim($data['class']);
+        $class = $rawClass;
+        $classGroup = array_key_exists('class_group', $data) ? (! empty($data['class_group']) ? trim($data['class_group']) : null) : $customer->class_group;
+        if (! $classGroup && preg_match('/^(X|XI|XII)\s+(.+)$/i', $rawClass, $matches)) {
+            $class = strtoupper($matches[1]);
+            $classGroup = trim($matches[2]);
+        }
+
         $updateData = [
             'nis' => trim($data['nis']),
             'name' => trim($data['name']),
-            'class' => trim($data['class']),
+            'class' => $class,
+            'class_group' => $classGroup,
             'phone' => isset($data['phone']) ? trim($data['phone']) : $customer->phone,
         ];
+
+        if (array_key_exists('academic_year_id', $data)) {
+            $updateData['academic_year_id'] = $data['academic_year_id'] ?: null;
+        }
+
+        if (array_key_exists('status', $data) && ! empty($data['status'])) {
+            $updateData['status'] = $data['status'];
+        }
 
         if (array_key_exists('email', $data)) {
             $newEmail = ! empty($data['email']) ? strtolower(trim($data['email'])) : null;
@@ -161,6 +206,18 @@ class CustomerService
             }
         }
 
-        return $customer->update($updateData);
+        $updated = $customer->update($updateData);
+
+        if ($updated && $customer->academic_year_id) {
+            \App\Models\CustomerClassHistory::updateOrCreate([
+                'customer_id' => $customer->id,
+                'academic_year_id' => $customer->academic_year_id,
+            ], [
+                'class' => $customer->class,
+                'class_group' => $customer->class_group,
+            ]);
+        }
+
+        return $updated;
     }
 }

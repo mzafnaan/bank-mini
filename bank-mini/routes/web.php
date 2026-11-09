@@ -10,7 +10,7 @@ Route::get('/', function () {
 });
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('throttle:10,1')->post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Password Reset Routes (Guest only)
@@ -57,6 +57,15 @@ Route::middleware(['auth:web', 'role:administrator'])->prefix('admin')->name('ad
 
     // Accounting Audit
     Route::get('/journals', [AdminController::class, 'journals'])->name('journals');
+
+    // Academic Years Management
+    Route::get('/academic-years', [AdminController::class, 'academicYears'])->name('academic-years.index');
+    Route::post('/academic-years', [AdminController::class, 'storeAcademicYear'])->name('academic-years.store');
+    Route::patch('/academic-years/{academicYear}/activate', [AdminController::class, 'activateAcademicYear'])->name('academic-years.activate');
+
+    // Class Promotion Management
+    Route::get('/class-promotions', [AdminController::class, 'classPromotions'])->name('class-promotions.index');
+    Route::post('/class-promotions', [AdminController::class, 'processClassPromotion'])->name('class-promotions.process');
 });
 
 use App\Http\Controllers\Web\TellerController;

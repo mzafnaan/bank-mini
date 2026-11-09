@@ -3,174 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Laporan Transaksi {{ $period_label }} - Bank Mini</title>
+    <title>Laporan Transaksi Kas {{ $period_label }} - Bank Mini SMK N 1 Bantul</title>
+    
+    <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+    
     <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #1e293b;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        .kop-double-border {
+            border-bottom: 2px solid #0f172a;
+            position: relative;
+            padding-bottom: 12px;
+        }
+        .kop-double-border::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -5px;
+            border-bottom: 1px solid #0f172a;
+        }
         @media print {
             .no-print {
                 display: none !important;
             }
             body {
                 background: white !important;
-                color: black !important;
-                font-size: 11pt;
+                padding: 0 !important;
+                margin: 0 !important;
+                color: #0f172a !important;
+                font-size: 10pt;
+            }
+            .print-sheet {
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                margin: 0 !important;
             }
             @page {
                 size: A4 portrait;
-                margin: 1cm;
+                margin: 1.2cm 1.5cm;
             }
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            tr {
+                page-break-inside: avoid;
+            }
+            .break-inside-avoid {
+                page-break-inside: avoid;
+            }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 p-4 sm:p-8">
+<body class="bg-slate-100 text-slate-800 p-4 sm:p-8 text-xs">
 
     <!-- Top Action Bar (Screen only) -->
     <div class="max-w-4xl mx-auto mb-6 flex items-center justify-between no-print">
-        <a href="{{ route('supervisor.transactions.report', request()->query()) }}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md border border-slate-300 shadow-sm transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <a href="{{ route('supervisor.transactions.report', request()->query()) }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg border border-slate-300 shadow-sm transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            <span>Kembali ke Laporan</span>
+            <span>Kembali ke Rekap</span>
         </a>
 
-        <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-md shadow transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-            </svg>
-            <span>Cetak Dokumen Sekarang</span>
-        </button>
+        <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 mr-2 hidden sm:inline">Siap cetak atau simpan sebagai PDF</span>
+            <button onclick="window.print()" class="inline-flex items-center gap-2 px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                <span>Cetak / Simpan PDF</span>
+            </button>
+        </div>
     </div>
 
     <!-- Main Printable Sheet -->
-    <div class="max-w-4xl mx-auto bg-white p-8 sm:p-12 rounded-lg border border-slate-200 shadow-sm print:shadow-none print:border-none print:p-0">
+    <div class="print-sheet max-w-4xl mx-auto bg-white p-10 sm:p-12 rounded-xl border border-slate-200 shadow-sm">
         
         <!-- School & Bank Mini Header (KOP Surat) -->
-        <div class="flex items-center gap-5 border-b-2 border-slate-900 pb-5 mb-6">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo SMK" class="w-20 h-20 object-contain flex-shrink-0">
-            <div class="flex-1 text-center pr-10">
-                <h2 class="text-xs font-semibold tracking-widest text-slate-500 uppercase">PEMERINTAH DAERAH ISTIMEWA YOGYAKARTA</h2>
-                <h1 class="text-xl font-extrabold text-slate-900 uppercase tracking-tight">SMK NEGERI 1 BANTUL</h1>
-                <h3 class="text-sm font-bold text-blue-700 uppercase tracking-wider">UNIT LAYANAN BANK MINI SEKOLAH</h3>
-                <p class="text-xs text-slate-600 mt-1">Jl. Bantul No. 1, Sabdodadi, Bantul, D.I. Yogyakarta 55715 | Telp: (0274) 367156</p>
+        <div class="kop-double-border flex items-center gap-5 mb-8">
+            <img src="{{ asset('images/logo.png') }}" alt="Logo SMK N 1 Bantul" class="w-20 h-20 object-contain flex-shrink-0">
+            <div class="flex-1 text-center pr-8">
+                <h3 class="text-[11px] font-medium tracking-widest text-slate-500 uppercase">PEMERINTAH DAERAH ISTIMEWA YOGYAKARTA</h3>
+                <h1 class="text-lg font-bold text-slate-900 uppercase tracking-tight mt-0.5">SMK NEGERI 1 BANTUL</h1>
+                <h2 class="text-xs font-semibold text-blue-900 uppercase tracking-wider mt-0.5">UNIT LAYANAN BANK MINI SEKOLAH</h2>
+                <p class="text-[11px] text-slate-500 mt-1">Jl. Bantul No. 1, Sabdodadi, Bantul, D.I. Yogyakarta 55715 | Telp: (0274) 367156</p>
             </div>
         </div>
 
-        <!-- Document Title -->
-        <div class="text-center mb-6">
-            <h2 class="text-base font-extrabold text-slate-900 uppercase tracking-wider underline">
+        <!-- Document Title & Meta -->
+        <div class="text-center mb-7">
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">
                 LAPORAN TRANSAKSI MUTASI KAS {{ strtoupper($period) }}
             </h2>
-            <p class="text-xs text-slate-600 mt-1">
-                Periode: <strong class="text-slate-900">{{ $period_label }}</strong>
+            <div class="flex items-center justify-center gap-2 mt-1 text-xs text-slate-600">
+                <span>Periode: <strong class="font-medium text-slate-800">{{ $period_label }}</strong></span>
                 @if($type !== 'all')
-                    | Tipe: <strong class="capitalize text-slate-900">{{ $type === 'deposit' ? 'Hanya Setoran' : 'Hanya Penarikan' }}</strong>
+                    <span class="text-slate-300">•</span>
+                    <span>Filter: <strong class="font-medium text-slate-800">{{ $type === 'deposit' ? 'Setoran Tunai' : 'Penarikan Tunai' }}</strong></span>
                 @endif
-            </p>
+                <span class="text-slate-300">•</span>
+                <span>Dicetak: <span class="font-mono text-slate-600">{{ now()->format('d/m/Y H:i') }} WIB</span></span>
+            </div>
         </div>
 
-        <!-- Summary Recap Box -->
-        <div class="grid grid-cols-3 gap-3 mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs">
-            <div>
-                <span class="text-slate-500 block">Total Setoran Tunai</span>
-                <span class="text-sm font-bold text-emerald-700 block mt-0.5">Rp {{ number_format($total_deposit, 0, ',', '.') }}</span>
-                <span class="text-[10px] text-slate-400">({{ $count_deposit }} transaksi)</span>
+        <!-- Professional Summary Recap Cards -->
+        <div class="grid grid-cols-3 gap-4 mb-7">
+            <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-lg">
+                <span class="text-[10px] font-medium uppercase tracking-wider text-slate-500 block">Total Setoran</span>
+                <span class="text-sm font-semibold text-slate-900 font-mono block mt-1">Rp {{ number_format($total_deposit, 0, ',', '.') }}</span>
+                <span class="text-[10.5px] text-slate-500 mt-0.5 block">{{ $count_deposit }} transaksi tercatat</span>
             </div>
-            <div>
-                <span class="text-slate-500 block">Total Penarikan Tunai</span>
-                <span class="text-sm font-bold text-rose-700 block mt-0.5">Rp {{ number_format($total_withdrawal, 0, ',', '.') }}</span>
-                <span class="text-[10px] text-slate-400">({{ $count_withdrawal }} transaksi)</span>
+            <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-lg">
+                <span class="text-[10px] font-medium uppercase tracking-wider text-slate-500 block">Total Penarikan</span>
+                <span class="text-sm font-semibold text-slate-900 font-mono block mt-1">Rp {{ number_format($total_withdrawal, 0, ',', '.') }}</span>
+                <span class="text-[10.5px] text-slate-500 mt-0.5 block">{{ $count_withdrawal }} transaksi tercatat</span>
             </div>
-            <div>
-                <span class="text-slate-500 block">Kas Bersih (Net Flow)</span>
-                <span class="text-sm font-bold {{ $net_cash >= 0 ? 'text-blue-700' : 'text-red-700' }} block mt-0.5">
+            <div class="p-3.5 bg-slate-50/70 border border-slate-200 rounded-lg">
+                <span class="text-[10px] font-medium uppercase tracking-wider text-slate-500 block">Arus Kas Bersih (Net)</span>
+                <span class="text-sm font-semibold font-mono block mt-1 {{ $net_cash >= 0 ? 'text-slate-900' : 'text-rose-700' }}">
                     Rp {{ number_format($net_cash, 0, ',', '.') }}
                 </span>
-                <span class="text-[10px] text-slate-400">Total: {{ $total_count }} transaksi</span>
+                <span class="text-[10.5px] text-slate-500 mt-0.5 block">Total {{ $total_count }} mutasi kas</span>
             </div>
         </div>
 
         <!-- Transactions Table -->
-        <table class="w-full text-left text-xs border border-slate-300 border-collapse mb-8">
+        <table class="w-full text-left text-xs border border-slate-200 border-collapse mb-8">
             <thead>
-                <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
-                    <th class="border border-slate-300 px-3 py-2 text-center w-10">No</th>
-                    <th class="border border-slate-300 px-3 py-2 whitespace-nowrap">Waktu</th>
-                    <th class="border border-slate-300 px-3 py-2">No. TRX</th>
-                    <th class="border border-slate-300 px-3 py-2">No. Rekening</th>
-                    <th class="border border-slate-300 px-3 py-2">Nasabah</th>
-                    <th class="border border-slate-300 px-3 py-2">Kelas</th>
-                    <th class="border border-slate-300 px-3 py-2">Teller</th>
-                    <th class="border border-slate-300 px-3 py-2 text-center">Jenis</th>
-                    <th class="border border-slate-300 px-3 py-2 text-right">Nominal (Rp)</th>
+                <tr class="bg-slate-50 text-slate-600 font-semibold text-[11px] border-b border-slate-200">
+                    <th class="border-r border-slate-200 px-3 py-2.5 text-center w-10">No</th>
+                    <th class="border-r border-slate-200 px-3 py-2.5 whitespace-nowrap">Waktu</th>
+                    <th class="border-r border-slate-200 px-3 py-2.5">No. TRX</th>
+                    <th class="border-r border-slate-200 px-3 py-2.5">No. Rekening</th>
+                    <th class="border-r border-slate-200 px-3 py-2.5">Nasabah</th>
+                    <th class="border-r border-slate-200 px-3 py-2.5">Kelas</th>
+                    <th class="border-r border-slate-200 px-3 py-2.5">Teller</th>
+                    <th class="border-r border-slate-200 px-3 py-2.5 text-center">Jenis</th>
+                    <th class="px-3 py-2.5 text-right">Nominal (Rp)</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-slate-200">
                 @forelse($transactions as $index => $trx)
-                    <tr class="{{ $index % 2 === 1 ? 'bg-slate-50/60' : 'bg-white' }}">
-                        <td class="border border-slate-300 px-3 py-1.5 text-center">{{ $index + 1 }}</td>
-                        <td class="border border-slate-300 px-3 py-1.5 whitespace-nowrap font-mono text-[11px]">
+                    <tr class="{{ $index % 2 === 1 ? 'bg-slate-50/40' : 'bg-white' }} hover:bg-slate-50/80 transition-colors">
+                        <td class="border-r border-slate-200 px-3 py-2 text-center text-slate-400 font-mono text-[11px]">{{ $index + 1 }}</td>
+                        <td class="border-r border-slate-200 px-3 py-2 whitespace-nowrap font-mono text-[11px] text-slate-600">
                             {{ $trx->created_at ? $trx->created_at->format('d/m/Y H:i') : '-' }}
                         </td>
-                        <td class="border border-slate-300 px-3 py-1.5 font-mono text-[11px]">
+                        <td class="border-r border-slate-200 px-3 py-2 font-mono text-[11px] text-slate-700">
                             TRX-{{ str_pad($trx->id, 6, '0', STR_PAD_LEFT) }}
                         </td>
-                        <td class="border border-slate-300 px-3 py-1.5 font-mono text-[11px]">
+                        <td class="border-r border-slate-200 px-3 py-2 font-mono text-[11px] text-slate-700">
                             {{ $trx->bankAccount?->account_number ?? '-' }}
                         </td>
-                        <td class="border border-slate-300 px-3 py-1.5 font-medium text-slate-900">
+                        <td class="border-r border-slate-200 px-3 py-2 font-medium text-slate-800">
                             {{ $trx->bankAccount?->customer?->name ?? 'N/A' }}
                         </td>
-                        <td class="border border-slate-300 px-3 py-1.5 text-slate-600">
+                        <td class="border-r border-slate-200 px-3 py-2 text-slate-600">
                             {{ $trx->bankAccount?->customer?->class ?? '-' }}
                         </td>
-                        <td class="border border-slate-300 px-3 py-1.5 text-slate-600">
+                        <td class="border-r border-slate-200 px-3 py-2 text-slate-600">
                             {{ $trx->teller?->name ?? 'System' }}
                         </td>
-                        <td class="border border-slate-300 px-3 py-1.5 text-center font-medium">
+                        <td class="border-r border-slate-200 px-3 py-2 text-center">
                             @if($trx->type === 'deposit')
-                                <span class="text-emerald-700">Setoran</span>
+                                <span class="inline-block px-2 py-0.5 text-[10.5px] font-medium text-emerald-800 bg-emerald-50 border border-emerald-200/60 rounded">
+                                    Setoran
+                                </span>
                             @else
-                                <span class="text-rose-700">Penarikan</span>
+                                <span class="inline-block px-2 py-0.5 text-[10.5px] font-medium text-rose-800 bg-rose-50 border border-rose-200/60 rounded">
+                                    Penarikan
+                                </span>
                             @endif
                         </td>
-                        <td class="border border-slate-300 px-3 py-1.5 text-right font-mono font-semibold">
+                        <td class="px-3 py-2 text-right font-mono font-medium text-slate-900 text-xs">
                             {{ number_format($trx->amount, 0, ',', '.') }}
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="border border-slate-300 px-4 py-8 text-center text-slate-400 italic">
-                            Tidak ada data transaksi pada periode laporan ini.
+                        <td colspan="9" class="px-4 py-8 text-center text-slate-400 italic">
+                            Tidak ada transaksi mutasi kas tercatat pada periode ini.
                         </td>
                     </tr>
                 @endforelse
             </tbody>
             <tfoot>
-                <tr class="bg-slate-100 font-bold border-t-2 border-slate-400">
-                    <td colspan="8" class="border border-slate-300 px-3 py-2 text-right">TOTAL KAS BERSIH:</td>
-                    <td class="border border-slate-300 px-3 py-2 text-right font-mono text-sm text-slate-900">
+                <tr class="bg-slate-50/80 font-semibold border-t-2 border-slate-300">
+                    <td colspan="8" class="border-r border-slate-200 px-3 py-2.5 text-right text-slate-700 uppercase tracking-wider text-[11px]">
+                        TOTAL KAS BERSIH (NET FLOW):
+                    </td>
+                    <td class="px-3 py-2.5 text-right font-mono text-xs font-semibold text-slate-900">
                         Rp {{ number_format($net_cash, 0, ',', '.') }}
                     </td>
                 </tr>
             </tfoot>
         </table>
 
-        <!-- Signature / Pengesahan Supervisor -->
-        <div class="flex justify-end mt-8 pt-4 text-xs text-slate-800 break-inside-avoid" style="page-break-inside: avoid;">
+        <!-- Formal Signature / Pengesahan Supervisor -->
+        <div class="flex justify-end mt-10 pt-4 text-xs text-slate-800 break-inside-avoid">
             <div class="text-center w-64">
-                <p>Bantul, {{ date('d F Y') }}</p>
-                <p class="font-semibold text-slate-900 mt-0.5">Supervisor Bank Mini</p>
-                <div class="h-16"></div>
-                <p class="font-bold underline text-slate-900">( {{ auth()->user()->name }} )</p>
-                <p class="text-slate-500 text-[10px] mt-0.5">NIP/ID: {{ auth()->user()->username }}</p>
+                <p class="text-slate-600">Bantul, {{ date('d F Y') }}</p>
+                <p class="font-medium text-slate-800 mt-1">Supervisor Bank Mini Sekolah</p>
+                
+                <div class="h-20 flex items-center justify-center">
+                    <!-- Space for physical stamp & signature -->
+                </div>
+                
+                <p class="font-semibold text-slate-900 underline underline-offset-4">( {{ auth()->user()->name }} )</p>
+                <p class="text-slate-500 text-[11px] mt-0.5 font-mono">ID / NIP: {{ auth()->user()->username }}</p>
             </div>
         </div>
+
     </div>
 
 </body>
 </html>
-

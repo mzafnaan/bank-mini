@@ -3,17 +3,22 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ProcessClassPromotionRequest;
+use App\Http\Requests\Admin\StoreAcademicYearRequest;
 use App\Http\Requests\Admin\StoreCustomerRequest;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateCustomerRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
+use App\Models\AcademicYear;
 use App\Models\BankAccount;
 use App\Models\Customer;
 use App\Models\JournalEntry;
 use App\Models\User;
 use App\Notifications\VerifyCustomerEmailNotification;
+use App\Services\AcademicYearService;
 use App\Services\AuthService;
 use App\Services\BankAccountService;
+use App\Services\ClassPromotionService;
 use App\Services\CustomerService;
 use App\Services\JournalService;
 use App\Services\UserService;
@@ -30,7 +35,9 @@ class AdminController extends Controller
         protected CustomerService $customerService,
         protected BankAccountService $bankAccountService,
         protected JournalService $journalService,
-        protected AuthService $authService
+        protected AuthService $authService,
+        protected AcademicYearService $academicYearService,
+        protected ClassPromotionService $classPromotionService
     ) {}
 
     /**
@@ -134,8 +141,9 @@ class AdminController extends Controller
         $search = trim($request->input('search', ''));
         $customers = $this->customerService->getAllCustomers($search);
         $tellers = User::where('role', 'teller')->where('status', 'active')->orderBy('name')->get();
+        $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
 
-        return view('admin.customers', compact('customers', 'search', 'tellers'));
+        return view('admin.customers', compact('customers', 'search', 'tellers', 'academicYears'));
     }
 
     public function storeCustomer(StoreCustomerRequest $request): RedirectResponse
@@ -264,5 +272,99 @@ class AdminController extends Controller
         $search = trim($request->input('search', ''));
         $journals = $this->journalService->getAllJournals($search);
         return view('admin.journals', compact('journals', 'search'));
+    }
+
+    /**
+     * Academic Years Management (Manajemen Tahun Ajaran).
+     */
+    public function academicYears(Request $request): View
+    {
+        $search = trim($request->input('search', ''));
+        $academicYears = $this->academicYearService->getAllAcademicYears($search);
+        $activeYear = $this->academicYearService->getActiveAcademicYear();
+        $previousYears = $this->academicYearService->getPreviousAcademicYears();
+
+        return view('admin.academic_years', compact('academicYears', 'activeYear', 'previousYears', 'search'));
+    }
+
+    public function storeAcademicYear(StoreAcademicYearRequest $request): RedirectResponse
+    {
+        $year = $this->academicYearService->createAcademicYear($request->validated());
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', "Tahun ajaran {$year->name} berhasil ditambahkan.");
+    }
+
+    public function activateAcademicYear(AcademicYear $academicYear): RedirectResponse
+    {
+        $this->academicYearService->activateAcademicYear($academicYear);
+
+        return redirect()->route('admin.academic-years.index')
+            ->with('success', "Tahun ajaran {$academicYear->name} sekarang berstatus Aktif.");
+    }
+
+    /**
+     * Class Promotion & Graduation (Kenaikan Kelas dan Kelulusan).
+     */
+    public function classPromotions(Request $request): View
+    {
+        $academicYears = $this->academicYearService->getAcademicYearList();
+        $activeYear = $this->academicYearService->getActiveAcademicYear();
+
+        $sourceYearId = $request->filled('source_academic_year_id')
+            ? (int) $request->input('source_academic_year_id')
+            : $activeYear?->id;
+
+        $targetYearId = $request->filled('target_academic_year_id')
+            ? (int) $request->input('target_academic_year_id')
+            : null;
+
+        $classLevel = $request->input('class_level');
+        $search = trim($request->input('search', ''));
+        $perPage = $request->input('per_page', 25) === 'all' ? 1000 : (int) $request->input('per_page', 25);
+
+        $candidates = $this->classPromotionService->getPromotionCandidates([
+            'source_academic_year_id' => $sourceYearId,
+            'class_level' => $classLevel,
+            'search' => $search,
+        ], $perPage);
+
+        $summary = $this->classPromotionService->getCandidateSummary($sourceYearId);
+        $sourceYear = $sourceYearId ? AcademicYear::find($sourceYearId) : null;
+        $targetYear = $targetYearId ? AcademicYear::find($targetYearId) : null;
+
+        return view('admin.class_promotions', compact(
+            'academicYears',
+            'activeYear',
+            'sourceYearId',
+            'targetYearId',
+            'sourceYear',
+            'targetYear',
+            'classLevel',
+            'search',
+            'candidates',
+            'summary'
+        ));
+    }
+
+    public function processClassPromotion(ProcessClassPromotionRequest $request): RedirectResponse
+    {
+        $targetYear = AcademicYear::findOrFail($request->input('target_academic_year_id'));
+        $sourceYearId = $request->input('source_academic_year_id');
+        $decisions = $request->input('decisions', []);
+
+        try {
+            $result = $this->classPromotionService->processPromotion($targetYear, $decisions, $sourceYearId ? (int) $sourceYearId : null);
+
+            return redirect()->route('admin.class-promotions.index', [
+                'source_academic_year_id' => $sourceYearId,
+                'target_academic_year_id' => $targetYear->id,
+            ])->with(
+                'success',
+                "Kenaikan kelas dan kelulusan berhasil diproses! Total {$result['total']} siswa ({$result['promoted']} naik kelas, {$result['stayed']} tinggal kelas, {$result['graduated']} lulus)."
+            );
+        } catch (\Exception $e) {
+            return back()->withInput()->with('error', 'Gagal memproses kenaikan kelas: ' . $e->getMessage());
+        }
     }
 }

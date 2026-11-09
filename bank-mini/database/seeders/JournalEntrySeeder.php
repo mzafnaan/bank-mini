@@ -15,7 +15,7 @@ class JournalEntrySeeder extends Seeder
                 'transaction_id' => 1,
                 'account_code' => '101',
                 'type' => 'debit',
-                'amount' => 500000,
+                'amount' => 250000,
                 'created_at' => now(),
             ],
             [
@@ -23,7 +23,7 @@ class JournalEntrySeeder extends Seeder
                 'transaction_id' => 1,
                 'account_code' => '201',
                 'type' => 'credit',
-                'amount' => 500000,
+                'amount' => 250000,
                 'created_at' => now(),
             ],
         ]);

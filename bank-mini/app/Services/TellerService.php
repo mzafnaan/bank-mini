@@ -296,6 +296,11 @@ class TellerService
     {
         $reportData = $this->getDailyReportData($tellerId, $date);
 
+        // Validation: If already approved by supervisor, report is final and cannot be resubmitted
+        if ($reportData['existing_report'] && $reportData['existing_report']->status === 'approved') {
+            throw new Exception("Laporan penutupan kas hari ini sudah disetujui (Approved) oleh Supervisor dan tidak dapat diubah atau dikirim ulang.");
+        }
+
         // Validation BR-050: Physical cash must equal calculated system cash
         if ((float) $physicalCash !== (float) $reportData['expected_closing_cash']) {
             $formattedPhysical = number_format($physicalCash, 0, ',', '.');

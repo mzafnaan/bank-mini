@@ -5,12 +5,12 @@ use App\Http\Controllers\Api\NasabahApiController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
-    // Public auth
-    Route::post('/auth/login', [AuthApiController::class, 'login']);
-    Route::post('/auth/forgot-password', [AuthApiController::class, 'forgotPassword']);
+    // Public auth with Rate Limiting (anti brute-force & spam)
+    Route::middleware('throttle:10,1')->post('/auth/login', [AuthApiController::class, 'login']);
+    Route::middleware('throttle:3,1')->post('/auth/forgot-password', [AuthApiController::class, 'forgotPassword']);
 
     // Protected customer routes
-    Route::middleware(['auth:sanctum', 'role:customer'])->group(function () {
+    Route::middleware(['auth:sanctum', 'role:customer', 'throttle:60,1'])->group(function () {
         // Customer auth & security
         Route::prefix('auth')->group(function () {
             Route::get('/me', [AuthApiController::class, 'me']);
@@ -31,9 +31,9 @@ Route::prefix('v1')->group(function () {
             Route::get('/riwayat/{id}', [NasabahApiController::class, 'transactionDetail']);
             Route::get('/rekening', [NasabahApiController::class, 'accountInfo']);
 
-            // Withdrawal Requests (Mobile PIN Verification)
+            // Withdrawal Requests (Mobile PIN Verification - strict throttle to protect 6-digit PIN)
             Route::get('/withdrawal-requests/pending', [NasabahApiController::class, 'pendingWithdrawalRequest']);
-            Route::post('/withdrawal-requests/{withdrawalRequest}/authorize', [NasabahApiController::class, 'authorizeWithdrawal']);
+            Route::middleware('throttle:5,1')->post('/withdrawal-requests/{withdrawalRequest}/authorize', [NasabahApiController::class, 'authorizeWithdrawal']);
             Route::post('/withdrawal-requests/{withdrawalRequest}/reject', [NasabahApiController::class, 'rejectWithdrawal']);
         });
     });

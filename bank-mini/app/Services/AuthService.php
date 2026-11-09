@@ -30,15 +30,18 @@ class AuthService
             return ['user' => $user, 'type' => 'staff'];
         }
 
-        // 2. Try customer account login
-        if (Auth::guard('customer_web')->attempt(['username' => $credentials['username'], 'password' => $credentials['password']])) {
-            $customer = Auth::guard('customer_web')->user();
+        // 2. Try customer account login (by username or NIS)
+        $identifier = trim($credentials['username']);
+        $customer = CustomerAccount::where('username', $identifier)
+            ->orWhereHas('customer', fn($q) => $q->where('nis', $identifier))
+            ->first();
 
+        if ($customer && Hash::check($credentials['password'], $customer->password)) {
             if ($customer->status !== 'active') {
-                Auth::guard('customer_web')->logout();
                 throw new \Exception('Akun nasabah Anda tidak aktif.');
             }
 
+            Auth::guard('customer_web')->login($customer);
             return ['user' => $customer, 'type' => 'customer'];
         }
 

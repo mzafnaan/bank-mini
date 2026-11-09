@@ -23,18 +23,21 @@
                     </div>
                     @if($reportData['existing_report'])
                         @if($reportData['existing_report']->status === 'approved')
-                            <span
-                                class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs rounded">
-                                Approved Supervisor
+                            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold text-xs rounded-md inline-flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Disetujui
+                            </span>
+                        @elseif($reportData['existing_report']->status === 'rejected')
+                            <span class="px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 font-semibold text-xs rounded-md">
+                                Ditolak
                             </span>
                         @else
-                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs rounded">
-                                Status: Draft menunggu Supervisor
+                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 font-semibold text-xs rounded-md">
+                                Menunggu Verifikasi
                             </span>
                         @endif
                     @else
-                        <span
-                            class="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 font-semibold text-xs rounded">
+                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 border border-slate-200 font-semibold text-xs rounded-md">
                             Belum Disubmit
                         </span>
                     @endif
@@ -69,40 +72,56 @@
                     </div>
                 </div>
 
-                <!-- Physical Cash Verification Form -->
-                <form action="{{ route('teller.daily-report.store') }}" method="POST"
-                    class="space-y-4 pt-4 border-t border-slate-100" onsubmit="return confirmSubmitDailyReport(event)">
-                    @csrf
-
-                    <div>
-                        <label for="physical_cash"
-                            class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
-                            Jumlah Uang Fisik Di Laci Kas (Rp) <span class="text-red-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
-                            <input type="number" id="physical_cash" name="physical_cash"
-                                value="{{ old('physical_cash', $reportData['existing_report']?->closing_cash ?? $reportData['expected_closing_cash']) }}"
-                                min="0" step="1000" required placeholder="Masukkan hasil hitungan fisik..."
-                                oninput="checkBalanceMatch()"
-                                class="w-full pl-10 pr-4 py-2 text-lg font-bold bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition text-slate-900">
+                @if($reportData['existing_report'] && $reportData['existing_report']->status === 'approved')
+                    <!-- Simple Approved Banner -->
+                    <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-lg flex items-center gap-3.5">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0 text-emerald-600">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-semibold text-emerald-950">Laporan Kas Hari Ini Telah Disetujui</h4>
+                            <p class="text-xs text-emerald-700 mt-0.5">
+                                Laci kas resmi ditutup dengan saldo akhir fisik <strong>Rp {{ number_format($reportData['existing_report']->closing_cash, 0, ',', '.') }}</strong>.
+                            </p>
                         </div>
                     </div>
+                @else
+                    <!-- Physical Cash Verification Form -->
+                    <form action="{{ route('teller.daily-report.store') }}" method="POST"
+                        class="space-y-4 pt-4 border-t border-slate-100" onsubmit="return confirmSubmitDailyReport(event)">
+                        @csrf
 
-                    <!-- Live Reconciliation Status Indicator -->
-                    <div id="match_status_box"
-                        class="p-3.5 rounded-md text-xs font-medium transition flex items-center gap-2">
-                        <!-- JS injected status -->
-                    </div>
+                        <div>
+                            <label for="physical_cash"
+                                class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1.5">
+                                Jumlah Uang Fisik Di Laci Kas (Rp) <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-3.5 top-2.5 text-sm font-bold text-slate-400">Rp</span>
+                                <input type="number" id="physical_cash" name="physical_cash"
+                                    value="{{ old('physical_cash', $reportData['existing_report']?->closing_cash ?? $reportData['expected_closing_cash']) }}"
+                                    min="0" step="1000" required placeholder="Masukkan hasil hitungan fisik..."
+                                    oninput="checkBalanceMatch()"
+                                    class="w-full pl-10 pr-4 py-2 text-lg font-bold bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition text-slate-900">
+                            </div>
+                        </div>
 
-                    <div class="flex items-center justify-end gap-3 pt-2">
-                        <button type="submit" id="submit_btn"
-                            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition flex items-center gap-1.5">
-                            <span>Kirim Laporan Kas Ke Supervisor</span>
-                        </button>
-                    </div>
+                        <!-- Live Reconciliation Status Indicator -->
+                        <div id="match_status_box"
+                            class="p-3.5 rounded-md text-xs font-medium transition flex items-center gap-2">
+                            <!-- JS injected status -->
+                        </div>
 
-                </form>
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="submit" id="submit_btn"
+                                class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-md shadow-sm transition flex items-center gap-1.5">
+                                <span>Kirim Laporan Kas Ke Supervisor</span>
+                            </button>
+                        </div>
+                    </form>
+                @endif
 
             </div>
 
@@ -124,10 +143,14 @@
 
     <script>
         function checkBalanceMatch() {
-            const systemVal = parseFloat(document.getElementById('system_balance').getAttribute('data-value')) || 0;
-            const inputVal = parseFloat(document.getElementById('physical_cash').value) || 0;
+            const physicalInput = document.getElementById('physical_cash');
+            if (!physicalInput) return;
+
+            const systemVal = parseFloat(document.getElementById('system_balance')?.getAttribute('data-value')) || 0;
+            const inputVal = parseFloat(physicalInput.value) || 0;
             const box = document.getElementById('match_status_box');
             const btn = document.getElementById('submit_btn');
+            if (!box || !btn) return;
 
             if (inputVal === systemVal) {
                 box.className = "p-3.5 bg-blue-50 text-blue-900 border border-blue-200 rounded-md text-xs font-medium flex items-center gap-2";

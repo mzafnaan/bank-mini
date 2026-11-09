@@ -135,8 +135,21 @@
 
                     <div>
                         <label for="current_password" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Password Saat Ini</label>
-                        <input type="password" id="current_password" name="current_password" required
-                               class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                        <div class="relative">
+                            <input type="password" id="current_password" name="current_password" required
+                                   class="w-full pl-3.5 pr-10 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                            <button type="button" onclick="togglePasswordVisibility('current_password', this)"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                                tabindex="-1" aria-label="Lihat Password">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 eye-closed hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                </svg>
+                            </button>
+                        </div>
                         @error('current_password')
                             <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span>
                         @enderror
@@ -144,8 +157,21 @@
 
                     <div>
                         <label for="new_password" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Password Baru</label>
-                        <input type="password" id="new_password" name="new_password" required minlength="6"
-                               class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                        <div class="relative">
+                            <input type="password" id="new_password" name="new_password" required minlength="6"
+                                   class="w-full pl-3.5 pr-10 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                            <button type="button" onclick="togglePasswordVisibility('new_password', this)"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                                tabindex="-1" aria-label="Lihat Password">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 eye-closed hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                </svg>
+                            </button>
+                        </div>
                         @error('new_password')
                             <span class="text-xs text-red-600 mt-1 block">{{ $message }}</span>
                         @enderror
@@ -153,8 +179,21 @@
 
                     <div>
                         <label for="new_password_confirmation" class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Konfirmasi Password Baru</label>
-                        <input type="password" id="new_password_confirmation" name="new_password_confirmation" required minlength="6"
-                               class="w-full px-3.5 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                        <div class="relative">
+                            <input type="password" id="new_password_confirmation" name="new_password_confirmation" required minlength="6"
+                                   class="w-full pl-3.5 pr-10 py-2 text-sm bg-slate-50 border border-slate-300 rounded-md focus:outline-none focus:border-blue-600 focus:bg-white transition">
+                            <button type="button" onclick="togglePasswordVisibility('new_password_confirmation', this)"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                                tabindex="-1" aria-label="Lihat Password">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 eye-open" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 eye-closed hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="pt-2">
@@ -274,4 +313,19 @@
             </form>
         </div>
     </div>
+
+    <script>
+        function togglePasswordVisibility(inputId, btn) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+            if (eyeOpen && eyeClosed) {
+                eyeOpen.classList.toggle('hidden', isPassword);
+                eyeClosed.classList.toggle('hidden', !isPassword);
+            }
+        }
+    </script>
 @endsection

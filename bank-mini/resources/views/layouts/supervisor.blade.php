@@ -23,13 +23,13 @@
         
         <!-- Brand Header -->
         <div class="h-16 flex items-center justify-between px-6 border-b border-slate-100">
-            <div class="flex items-center gap-3">
-                <img src="{{ asset('images/logo.png') }}" alt="Logo SMK N 1 Bantul" class="w-10 h-10 object-contain flex-shrink-0">
+            <a href="{{ route('supervisor.dashboard') }}" class="flex items-center gap-3 group">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo SMK N 1 Bantul" class="w-10 h-10 object-contain flex-shrink-0 group-hover:scale-105 transition-transform">
                 <div>
-                    <span class="font-bold text-slate-900 text-base leading-tight block">Bank Mini</span>
+                    <span class="font-bold text-slate-900 text-base leading-tight block group-hover:text-blue-600 transition-colors">Bank Mini</span>
                     <span class="text-xs text-slate-500 block">Supervisor Panel</span>
                 </div>
-            </div>
+            </a>
             <!-- Mobile Close Button -->
             <button onclick="toggleSidebar(false)" type="button" class="md:hidden p-1.5 text-slate-400 hover:text-slate-600 rounded-md hover:bg-slate-100 transition" aria-label="Tutup Menu">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -72,14 +72,6 @@
                 </svg>
                 <span>Audit Jurnal</span>
             </a>
-
-            <button type="button" onclick="openStaffChangePasswordModal()"
-               class="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-md text-sm font-medium transition text-slate-600 hover:bg-slate-50 hover:text-slate-900 text-left">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                </svg>
-                <span>Ganti Password</span>
-            </button>
 
         </nav>
 

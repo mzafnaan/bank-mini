@@ -15,15 +15,7 @@ class TransactionSeeder extends Seeder
                 'bank_account_id' => 1,
                 'teller_id' => 2,
                 'type' => 'deposit',
-                'amount' => 500000,
-                'created_at' => now(),
-            ],
-            [
-                'id' => 2,
-                'bank_account_id' => 2,
-                'teller_id' => 2,
-                'type' => 'deposit',
-                'amount' => 300000,
+                'amount' => 250000,
                 'created_at' => now(),
             ],
         ]);

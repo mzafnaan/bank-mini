@@ -29,7 +29,9 @@
                     <tr>
                         <th class="px-6 py-3">NIS</th>
                         <th class="px-6 py-3">Nama Nasabah</th>
-                        <th class="px-6 py-3">Kelas</th>
+                        <th class="px-6 py-3">Kelas & Rombel</th>
+                        <th class="px-6 py-3">Tahun Ajaran</th>
+                        <th class="px-6 py-3">Status</th>
                         <th class="px-6 py-3">Telepon</th>
                         <th class="px-6 py-3">Email</th>
                         <th class="px-6 py-3">Nomor Rekening</th>
@@ -41,7 +43,27 @@
                         <tr class="hover:bg-slate-50 transition">
                             <td class="px-6 py-4 text-slate-700 font-semibold">{{ $customer->nis }}</td>
                             <td class="px-6 py-4 font-semibold text-slate-900">{{ $customer->name }}</td>
-                            <td class="px-6 py-4 text-slate-600">{{ $customer->class }}</td>
+                            <td class="px-6 py-4 text-slate-700 font-medium">{{ $customer->full_class }}</td>
+                            <td class="px-6 py-4 text-xs">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
+                                    {{ $customer->academicYear?->name ?? 'Belum Diatur' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($customer->status === 'active' || $customer->status === 'aktif')
+                                    <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700">
+                                        Aktif
+                                    </span>
+                                @elseif($customer->status === 'graduated')
+                                    <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-purple-50 text-purple-700">
+                                        Lulus
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-600">
+                                        Nonaktif
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-slate-600">{{ $customer->phone ?? '-' }}</td>
                             <td class="px-6 py-4 text-slate-600">
                                 @if($customer->pending_email)
@@ -81,7 +103,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-6 text-center text-slate-400">Belum ada data nasabah.</td>
+                            <td colspan="9" class="px-6 py-6 text-center text-slate-400">Belum ada data nasabah.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -114,16 +136,35 @@
                     <input type="text" name="name" required placeholder="Nama siswa" 
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tingkat Kelas *</label>
+                        <select id="add_customer_class" name="class" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                            <option value="X">X (Sepuluh)</option>
+                            <option value="XI">XI (Sebelas)</option>
+                            <option value="XII">XII (Dua Belas)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Rombel *</label>
+                        <input type="text" id="add_customer_class_group" name="class_group" required placeholder="Contoh: RPL 1" 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                    </div>
+                </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Kelas</label>
-                    <input type="text" id="add_customer_class" name="class" required placeholder="Contoh: XII RPL 1" 
-                        class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tahun Ajaran</label>
+                    <select name="academic_year_id" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                        <option value="">Otomatis (Tahun Ajaran Aktif)</option>
+                        @foreach($academicYears ?? [] as $ay)
+                            <option value="{{ $ay->id }}">{{ $ay->name }} {{ $ay->is_active ? '(Aktif)' : '' }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Jurusan</label>
                     <select name="major" id="add_customer_major" 
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
-                        <option value="">Auto Deteksi</option>
+                        <option value="">Auto Deteksi dari Rombel</option>
                         <option value="RPL">RPL - Rekayasa Perangkat Lunak</option>
                         <option value="TKJ">TKJ - Teknik Komputer Jaringan</option>
                         <option value="DKV">DKV - Desain Komunikasi Visual</option>
@@ -134,8 +175,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. Telepon (Opsional)</label>
-                    <input type="text" name="phone" placeholder="08xxxxxxxxxx" 
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. Telepon</label>
+                    <input type="tel" name="phone" placeholder="08xxxxxxxxxx" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="15"
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
                 <div>
@@ -188,18 +229,45 @@
                     <input type="text" id="edit_name" name="name" required 
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tingkat Kelas *</label>
+                        <select id="edit_class" name="class" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                            <option value="X">X (Sepuluh)</option>
+                            <option value="XI">XI (Sebelas)</option>
+                            <option value="XII">XII (Dua Belas)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Rombel *</label>
+                        <input type="text" id="edit_class_group" name="class_group" required placeholder="Contoh: RPL 1" 
+                            class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                    </div>
+                </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Kelas</label>
-                    <input type="text" id="edit_class" name="class" required 
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Status Nasabah *</label>
+                    <select id="edit_status" name="status" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                        <option value="active">Aktif</option>
+                        <option value="inactive">Nonaktif</option>
+                        <option value="graduated">Lulus</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tahun Ajaran</label>
+                    <select id="edit_academic_year_id" name="academic_year_id" class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                        <option value="">-- Pilih Tahun Ajaran --</option>
+                        @foreach($academicYears ?? [] as $ay)
+                            <option value="{{ $ay->id }}">{{ $ay->name }} {{ $ay->is_active ? '(Aktif)' : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. Telepon (Opsional, Hanya Angka)</label>
+                    <input type="tel" id="edit_phone" name="phone" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="15"
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. Telepon (Opsional)</label>
-                    <input type="text" id="edit_phone" name="phone" 
-                        class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email (Opsional, untuk Reset Password)</label>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email</label>
                     <input type="email" id="edit_email" name="email" placeholder="siswa@sekolah.sch.id" 
                         class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
                 </div>
@@ -222,7 +290,10 @@
             document.getElementById('formEditCustomer').action = '/admin/customers/' + customer.id;
             document.getElementById('edit_nis').value = customer.nis;
             document.getElementById('edit_name').value = customer.name;
-            document.getElementById('edit_class').value = customer.class;
+            document.getElementById('edit_class').value = customer.class || 'X';
+            document.getElementById('edit_class_group').value = customer.class_group || '';
+            document.getElementById('edit_status').value = customer.status || 'active';
+            document.getElementById('edit_academic_year_id').value = customer.academic_year_id || '';
             document.getElementById('edit_phone').value = customer.phone || '';
             document.getElementById('edit_email').value = customer.pending_email || customer.email || '';
             document.getElementById('modalEditCustomer').classList.remove('hidden');
@@ -243,14 +314,16 @@
             });
         }
 
-        // Auto-detect jurusan from class input
-        document.getElementById('add_customer_class')?.addEventListener('input', function() {
+        // Auto-detect jurusan from class group input
+        document.getElementById('add_customer_class_group')?.addEventListener('input', function() {
             const val = this.value;
             const match = val.match(/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i);
             const select = document.getElementById('add_customer_major');
             if (match && select) {
                 select.value = match[1].toUpperCase();
             }
+        });
+    </script>
         });
     </script>
 
