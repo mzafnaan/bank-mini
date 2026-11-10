@@ -5,6 +5,7 @@ import '../../models/transaction.dart';
 import '../../providers/account_provider.dart';
 import '../../widgets/transaction_item.dart';
 import 'transaction_detail_screen.dart';
+import 'widgets/export_mutation_sheet.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -120,14 +121,59 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Riwayat',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF111827),
-                      letterSpacing: -0.5,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Riwayat',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF111827),
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () => ExportMutationSheet.show(context),
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border:
+                                Border.all(color: const Color(0xFFE5E7EB)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.03),
+                                blurRadius: 4,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.print_outlined,
+                                size: 16,
+                                color: Color(0xFF111827),
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Cetak / Export',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFF111827),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 14),
 

@@ -7,6 +7,7 @@ import 'account/account_screen.dart';
 import 'history/history_screen.dart';
 import 'home/home_screen.dart';
 import 'security/security_screen.dart';
+import 'stats/stats_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -39,9 +40,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     // Check immediately
     _checkPendingAndPrompt();
 
-    // Periodic check every 3 seconds
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
-      if (!mounted) return;
+    // Periodic check every 6 seconds (paused if PIN prompt sheet is currently open)
+    _pollingTimer = Timer.periodic(const Duration(seconds: 6), (_) async {
+      if (!mounted || _isPromptOpen) return;
       await context.read<AccountProvider>().checkPendingWithdrawal();
       _checkPendingAndPrompt();
     });
@@ -74,8 +75,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     if (index == 0) {
       context.read<AccountProvider>().fetchDashboard();
     } else if (index == 1) {
-      context.read<AccountProvider>().fetchTransactionHistory();
+      context.read<AccountProvider>().fetchStats();
     } else if (index == 2) {
+      context.read<AccountProvider>().fetchTransactionHistory();
+    } else if (index == 3) {
       context.read<AccountProvider>().fetchAccountInfo();
     }
   }
@@ -84,8 +87,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget build(BuildContext context) {
     final List<Widget> screens = [
       HomeScreen(
-        onViewAllTransactions: () => _onTabSelected(1),
+        onViewAllTransactions: () => _onTabSelected(2),
       ),
+      const StatsScreen(),
       const HistoryScreen(),
       const AccountScreen(),
       const SecurityScreen(),
@@ -112,11 +116,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           selectedItemColor: const Color(0xFF111827),
           unselectedItemColor: const Color(0xFF9CA3AF),
           selectedLabelStyle: const TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w700,
           ),
           unselectedLabelStyle: const TextStyle(
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
           items: const [
@@ -124,6 +128,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.home_outlined),
               activeIcon: Icon(Icons.home_filled),
               label: 'Beranda',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.pie_chart_outline_rounded),
+              activeIcon: Icon(Icons.pie_chart_rounded),
+              label: 'Statistik',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.access_time_rounded),

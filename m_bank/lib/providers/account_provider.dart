@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../core/network/api_client.dart';
 import '../models/dashboard_data.dart';
 import '../models/pending_withdrawal.dart';
+import '../models/stats_data.dart';
 import '../models/transaction.dart';
 
-/// Manages dashboard data, transaction history, account info, and withdrawal authorizations.
+/// Manages dashboard data, transaction history, account info, monthly stats, and deactivation approval.
 class AccountProvider extends ChangeNotifier {
   final ApiClient _api = ApiClient.instance;
 
@@ -17,6 +19,15 @@ class AccountProvider extends ChangeNotifier {
   // Pending Withdrawal Authorization
   PendingWithdrawal? _pendingWithdrawal;
   bool _isAuthorizingWithdrawal = false;
+
+  // Monthly Stats & Analytics
+  MonthlyStatsData? _statsData;
+  bool _isStatsLoading = false;
+  String? _statsError;
+  DateTime _selectedStatsMonth = DateTime.now();
+
+  // Deactivation processing
+  bool _isProcessingDeactivation = false;
 
   // Transaction history
   final List<Transaction> _transactions = [];
@@ -37,6 +48,13 @@ class AccountProvider extends ChangeNotifier {
   PendingWithdrawal? get pendingWithdrawal =>
       _pendingWithdrawal ?? _dashboardData?.pendingWithdrawal;
   bool get isAuthorizingWithdrawal => _isAuthorizingWithdrawal;
+
+  MonthlyStatsData? get statsData => _statsData;
+  bool get isStatsLoading => _isStatsLoading;
+  String? get statsError => _statsError;
+  DateTime get selectedStatsMonth => _selectedStatsMonth;
+
+  bool get isProcessingDeactivation => _isProcessingDeactivation;
 
   List<Transaction> get transactions => List.unmodifiable(_transactions);
   bool get isHistoryLoading => _isHistoryLoading;
@@ -237,21 +255,149 @@ class AccountProvider extends ChangeNotifier {
     }
   }
 
+  // ─── Monthly Stats & Analytics ───────────────────────────────
+
+  /// Fetch monthly financial statistics for the donut / pie chart dashboard.
+  Future<void> fetchStats([DateTime? month]) async {
+    if (month != null) {
+      _selectedStatsMonth = month;
+    }
+    final monthParam = DateFormat('yyyy-MM').format(_selectedStatsMonth);
+
+    _isStatsLoading = true;
+    _statsError = null;
+    notifyListeners();
+
+    try {
+      final response = await _api.getStats(month: monthParam);
+      final data = response.data as Map<String, dynamic>;
+
+      if (data['success'] == true) {
+        _statsData = MonthlyStatsData.fromJson(
+          data['data'] as Map<String, dynamic>,
+        );
+      } else {
+        _statsError = data['message'] as String? ?? 'Gagal memuat statistik.';
+      }
+    } on DioException catch (e) {
+      _statsError = _extractError(e);
+    } catch (e) {
+      _statsError = 'Terjadi kesalahan sistem.';
+    } finally {
+      _isStatsLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Change active month filter and re-fetch stats.
+  void changeStatsMonth(DateTime newMonth) {
+    _selectedStatsMonth = newMonth;
+    fetchStats(newMonth);
+  }
+
+  // ─── Customer Deactivation Approval ──────────────────────────
+
+  /// Customer approves account deactivation request.
+  Future<({bool success, String message})> approveDeactivation() async {
+    _isProcessingDeactivation = true;
+    notifyListeners();
+
+    try {
+      final response = await _api.approveDeactivation();
+      final data = response.data as Map<String, dynamic>;
+
+      if (data['success'] == true) {
+        clear();
+        return (
+          success: true,
+          message: data['message'] as String? ??
+              'Rekening Anda telah resmi dinonaktifkan.',
+        );
+      } else {
+        return (
+          success: false,
+          message: data['message'] as String? ?? 'Gagal memproses permohonan.',
+        );
+      }
+    } on DioException catch (e) {
+      return (
+        success: false,
+        message: _extractError(e),
+      );
+    } catch (e) {
+      return (
+        success: false,
+        message: 'Terjadi kesalahan sistem.',
+      );
+    } finally {
+      _isProcessingDeactivation = false;
+      notifyListeners();
+    }
+  }
+
+  /// Customer rejects account deactivation request.
+  Future<({bool success, String message})> rejectDeactivation() async {
+    _isProcessingDeactivation = true;
+    notifyListeners();
+
+    try {
+      final response = await _api.rejectDeactivation();
+      final data = response.data as Map<String, dynamic>;
+
+      if (data['success'] == true) {
+        // Refresh dashboard so the pending card disappears
+        await fetchDashboard();
+        return (
+          success: true,
+          message: data['message'] as String? ??
+              'Pengajuan penonaktifan rekening berhasil ditolak.',
+        );
+      } else {
+        return (
+          success: false,
+          message: data['message'] as String? ?? 'Gagal menolak permohonan.',
+        );
+      }
+    } on DioException catch (e) {
+      return (
+        success: false,
+        message: _extractError(e),
+      );
+    } catch (e) {
+      return (
+        success: false,
+        message: 'Terjadi kesalahan sistem.',
+      );
+    } finally {
+      _isProcessingDeactivation = false;
+      notifyListeners();
+    }
+  }
+
   /// Clear all data (on logout).
   void clear() {
     _dashboardData = null;
     _pendingWithdrawal = null;
     _transactions.clear();
     _accountInfo = null;
+    _statsData = null;
     _currentPage = 1;
     _lastPage = 1;
     notifyListeners();
   }
 
   String _extractError(DioException e) {
+    if (e.response?.statusCode == 429) {
+      return 'Terlalu banyak permintaan. Harap tunggu beberapa detik sebelum mencoba lagi.';
+    }
     if (e.response?.data is Map<String, dynamic>) {
-      return (e.response!.data as Map<String, dynamic>)['message'] as String? ??
-          'Terjadi kesalahan.';
+      final msg =
+          (e.response!.data as Map<String, dynamic>)['message'] as String? ??
+              '';
+      if (msg.toLowerCase().contains('too many attempts')) {
+        return 'Terlalu banyak percobaan. Harap tunggu beberapa detik sebelum mencoba lagi.';
+      }
+      if (msg.isNotEmpty) return msg;
     }
     return 'Tidak dapat terhubung ke server.';
   }

@@ -3,14 +3,14 @@ class AppConstants {
   AppConstants._();
 
   /// App display name.
-  static const String appName = 'Bank Mini';
+  static const String appName = 'Bank Mini Mobile';
 
   /// Base URL for the Laravel API.
   /// - Web (Chrome / Edge): http://127.0.0.1:8000
   /// - Physical Android phone (via USB with adb reverse): http://127.0.0.1:8000
   /// - Android Emulator: http://10.0.2.2:8000
   static String get baseUrl {
-    return 'http://127.0.0.1:8000';
+    return 'https://bankminiafnaan.my.id';
   }
 
   static const String apiPrefix = '/api/v1';

@@ -1,6 +1,30 @@
 import 'pending_withdrawal.dart';
 import 'transaction.dart';
 
+/// Customer deactivation approval request sent by Admin.
+class PendingDeactivation {
+  final bool isPending;
+  final DateTime? requestedAt;
+  final String reason;
+
+  PendingDeactivation({
+    required this.isPending,
+    this.requestedAt,
+    required this.reason,
+  });
+
+  factory PendingDeactivation.fromJson(Map<String, dynamic> json) {
+    return PendingDeactivation(
+      isPending: json['is_pending'] as bool? ?? false,
+      requestedAt: json['requested_at'] != null
+          ? DateTime.tryParse(json['requested_at'].toString())
+          : null,
+      reason: json['reason'] as String? ??
+          'Administrator telah mengajukan penonaktifan rekening Anda.',
+    );
+  }
+}
+
 /// Dashboard summary data returned by the API.
 class DashboardData {
   final String customerName;
@@ -10,6 +34,7 @@ class DashboardData {
   final double totalWithdrawal;
   final List<Transaction> recentTransactions;
   final PendingWithdrawal? pendingWithdrawal;
+  final PendingDeactivation? pendingDeactivation;
 
   DashboardData({
     required this.customerName,
@@ -19,6 +44,7 @@ class DashboardData {
     required this.totalWithdrawal,
     required this.recentTransactions,
     this.pendingWithdrawal,
+    this.pendingDeactivation,
   });
 
   factory DashboardData.fromJson(Map<String, dynamic> json) {
@@ -35,6 +61,11 @@ class DashboardData {
       pendingWithdrawal: json['pending_withdrawal'] != null
           ? PendingWithdrawal.fromJson(
               json['pending_withdrawal'] as Map<String, dynamic>,
+            )
+          : null,
+      pendingDeactivation: json['pending_deactivation'] != null
+          ? PendingDeactivation.fromJson(
+              json['pending_deactivation'] as Map<String, dynamic>,
             )
           : null,
     );

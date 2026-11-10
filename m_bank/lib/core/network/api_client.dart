@@ -180,7 +180,62 @@ class ApiClient {
     return _dio.post('/auth/cancel-pending-email');
   }
 
+  // ─── Monthly Stats & Analytics ───────────────────────────────
+
+  /// Get monthly stats (income, expense, percentage breakdown) for mobile chart.
+  Future<Response> getStats({String? month}) {
+    return _dio.get(
+      '/nasabah/stats',
+      queryParameters: month != null ? {'month': month} : null,
+    );
+  }
+
+  // ─── Customer Deactivation Approval ──────────────────────────
+
+  /// Customer approves account deactivation requested by Admin.
+  Future<Response> approveDeactivation() {
+    return _dio.post('/nasabah/deactivation/approve');
+  }
+
+  /// Customer rejects account deactivation requested by Admin.
+  Future<Response> rejectDeactivation() {
+    return _dio.post('/nasabah/deactivation/reject');
+  }
+
+  // ─── Mutation Export URLs ─────────────────────────────────────
+
+  /// Build URL for printing mutation report (PDF print layout).
+  Future<String> getPrintMutationUrl({String? startDate, String? endDate, String? type}) async {
+    final token = await _storage.read(key: AppConstants.tokenKey);
+    final params = <String, String>{};
+    if (startDate != null && startDate.isNotEmpty) params['start_date'] = startDate;
+    if (endDate != null && endDate.isNotEmpty) params['end_date'] = endDate;
+    if (type != null && type.isNotEmpty && type != 'all') params['type'] = type;
+    if (token != null) params['token'] = token;
+
+    final query = Uri(queryParameters: params).query;
+    return '${AppConstants.baseUrl}${AppConstants.apiPrefix}/nasabah/mutasi/print?$query';
+  }
+
+  /// Build URL for exporting mutation report to Excel / CSV.
+  Future<String> getExportExcelMutationUrl({String? startDate, String? endDate, String? type}) async {
+    final token = await _storage.read(key: AppConstants.tokenKey);
+    final params = <String, String>{};
+    if (startDate != null && startDate.isNotEmpty) params['start_date'] = startDate;
+    if (endDate != null && endDate.isNotEmpty) params['end_date'] = endDate;
+    if (type != null && type.isNotEmpty && type != 'all') params['type'] = type;
+    if (token != null) params['token'] = token;
+
+    final query = Uri(queryParameters: params).query;
+    return '${AppConstants.baseUrl}${AppConstants.apiPrefix}/nasabah/mutasi/export-excel?$query';
+  }
+
   // ─── Token Management ─────────────────────────────────────────
+
+  /// Retrieve current access token from secure storage.
+  Future<String?> getToken() async {
+    return await _storage.read(key: AppConstants.tokenKey);
+  }
 
   /// Save access token to secure storage.
   Future<void> saveToken(String token) async {

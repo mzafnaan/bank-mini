@@ -4,6 +4,7 @@ import '../../core/constants/app_constants.dart';
 import '../../core/utils/formatters.dart';
 import '../../providers/account_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../widgets/pending_deactivation_card.dart';
 import '../../widgets/pending_withdrawal_card.dart';
 import '../../widgets/transaction_item.dart';
 import '../history/transaction_detail_screen.dart';
@@ -111,6 +112,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+
+                // Pending Deactivation Request Alert Card
+                if (dashboard?.pendingDeactivation != null &&
+                    dashboard!.pendingDeactivation!.isPending)
+                  PendingDeactivationCard(
+                    request: dashboard.pendingDeactivation!,
+                  ),
 
                 // Pending Cash Withdrawal Alert Card
                 if (account.pendingWithdrawal != null)
