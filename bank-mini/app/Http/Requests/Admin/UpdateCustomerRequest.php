@@ -22,7 +22,8 @@ class UpdateCustomerRequest extends FormRequest
             'class' => ['required', 'string', 'max:20'],
             'class_group' => ['nullable', 'string', 'max:50'],
             'academic_year_id' => ['nullable', 'exists:academic_years,id'],
-            'status' => ['nullable', 'string', 'in:active,inactive,aktif,nonaktif'],
+            'status' => ['nullable', 'string', 'in:active,inactive,aktif,nonaktif,graduated'],
+            'deactivation_reason' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'min:9', 'max:15'],
             'email' => [
                 'nullable',

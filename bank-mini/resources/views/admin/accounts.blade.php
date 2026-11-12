@@ -59,7 +59,12 @@
                             Rp {{ number_format($account->balance, 0, ',', '.') }}
                         </td>
                         <td class="px-6 py-4">
-                            @if($account->status === 'active')
+                            @if($account->customer?->deactivation_requested_at)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 text-amber-700 border border-amber-200" title="Menunggu persetujuan nasabah">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                    Menunggu Approve
+                                </span>
+                            @elseif($account->status === 'active')
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700">Aktif</span>
                             @else
                                 <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-slate-100 text-slate-500">Nonaktif</span>
@@ -115,7 +120,6 @@
 
             <form id="formConfirmStatus" method="POST" class="flex justify-end gap-2">
                 @csrf
-                @method('PATCH')
                 <button type="button" onclick="closeConfirmModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-md transition">
                     Batal
                 </button>

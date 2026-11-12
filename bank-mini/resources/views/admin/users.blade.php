@@ -95,11 +95,16 @@
                 </tbody>
             </table>
         </div>
-        @if($users->hasPages())
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
-                {{ $users->links() }}
+        <div class="px-6 py-3.5 border-t border-slate-200/80 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div>
+                Menampilkan <span class="font-semibold text-slate-700">{{ $users->firstItem() ?? 0 }}</span> sampai <span class="font-semibold text-slate-700">{{ $users->lastItem() ?? 0 }}</span> dari <span class="font-semibold text-slate-700">{{ $users->total() }}</span> pengguna
             </div>
-        @endif
+            @if($users->hasPages())
+                <div>
+                    {{ $users->links() }}
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- Modal Konfirmasi Status Pengguna -->

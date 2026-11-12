@@ -19,11 +19,13 @@ use App\Services\AcademicYearService;
 use App\Services\AuthService;
 use App\Services\BankAccountService;
 use App\Services\ClassPromotionService;
+use App\Services\CustomerImportService;
 use App\Services\CustomerService;
 use App\Services\JournalService;
 use App\Services\UserService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
@@ -37,7 +39,8 @@ class AdminController extends Controller
         protected JournalService $journalService,
         protected AuthService $authService,
         protected AcademicYearService $academicYearService,
-        protected ClassPromotionService $classPromotionService
+        protected ClassPromotionService $classPromotionService,
+        protected CustomerImportService $customerImportService
     ) {}
 
     /**
@@ -79,7 +82,8 @@ class AdminController extends Controller
     public function users(Request $request): View
     {
         $search = trim($request->input('search', ''));
-        $users = $this->userService->getAllUsers($search);
+        $perPage = (int) $request->input('per_page', 10);
+        $users = $this->userService->getAllUsers($search, $perPage);
         return view('admin.users', compact('users', 'search'));
     }
 
@@ -139,7 +143,8 @@ class AdminController extends Controller
     public function customers(Request $request): View
     {
         $search = trim($request->input('search', ''));
-        $customers = $this->customerService->getAllCustomers($search);
+        $perPage = (int) $request->input('per_page', 10);
+        $customers = $this->customerService->getAllCustomers($search, $perPage);
         $tellers = User::where('role', 'teller')->where('status', 'active')->orderBy('name')->get();
         $academicYears = AcademicYear::orderBy('start_date', 'desc')->get();
 
@@ -182,6 +187,7 @@ class AdminController extends Controller
     {
         $this->customerService->updateCustomer($customer, $request->validated());
         $emailChangedToPending = $customer->wasChanged('pending_email') && $customer->pending_email;
+        $deactivationRequested = $customer->wasChanged('deactivation_requested_at') && $customer->deactivation_requested_at;
         $emailWarning = null;
         if ($emailChangedToPending) {
             try {
@@ -191,11 +197,144 @@ class AdminController extends Controller
             }
         }
 
-        $message = $emailChangedToPending
-            ? 'Data nasabah diperbarui. Email pemulihan baru aktif setelah diverifikasi.'
-            : 'Data nasabah berhasil diperbarui.';
+        if ($deactivationRequested) {
+            $message = "Pengajuan penonaktifan akun nasabah '{$customer->name}' telah dikirim ke nasabah untuk disetujui (Approve).";
+        } elseif ($emailChangedToPending) {
+            $message = 'Data nasabah diperbarui. Email pemulihan baru aktif setelah diverifikasi.';
+        } else {
+            $message = 'Data nasabah berhasil diperbarui.';
+        }
+
         $response = redirect()->route('admin.customers')->with('success', $message);
         return $emailWarning ? $response->with('error', $emailWarning) : $response;
+    }
+
+    public function cancelCustomerDeactivation(Customer $customer): RedirectResponse
+    {
+        $this->customerService->cancelDeactivationRequest($customer);
+        return redirect()->route('admin.customers')->with('success', "Pengajuan penonaktifan nasabah '{$customer->name}' berhasil dibatalkan.");
+    }
+
+    /**
+     * Download template file CSV untuk format import nasabah.
+     */
+    public function downloadImportTemplate(): Response
+    {
+        $csvContent = $this->customerImportService->generateTemplateCsv();
+        return response($csvContent, 200, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template_import_nasabah.csv"',
+        ]);
+    }
+
+    /**
+     * Import massal data siswa/nasabah dari file Excel (.xlsx) atau CSV (.csv).
+     */
+    public function importCustomers(Request $request): RedirectResponse
+    {
+        if (! $request->hasFile('file')) {
+            $rawError = $_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE;
+            if ($rawError === UPLOAD_ERR_INI_SIZE || $rawError === UPLOAD_ERR_FORM_SIZE) {
+                return back()->withErrors(['file' => 'Ukuran file terlalu besar melebihi batas upload server.']);
+            }
+            return back()->withErrors(['file' => 'Silakan pilih file Excel (.xlsx) atau CSV (.csv) untuk diunggah.']);
+        }
+
+        $uploadedFile = $request->file('file');
+        if (! $uploadedFile->isValid()) {
+            $errorCode = $uploadedFile->getError();
+            $errorMap = [
+                UPLOAD_ERR_INI_SIZE => 'Ukuran file melebihi batas upload server (upload_max_filesize).',
+                UPLOAD_ERR_FORM_SIZE => 'Ukuran file melebihi batas form.',
+                UPLOAD_ERR_PARTIAL => 'File hanya terunggah sebagian. Silakan coba unggah kembali.',
+                UPLOAD_ERR_NO_FILE => 'Tidak ada file yang dipilih.',
+                UPLOAD_ERR_NO_TMP_DIR => 'Folder temporary server tidak ditemukan.',
+                UPLOAD_ERR_CANT_WRITE => 'Gagal menulis file sementara ke disk.',
+                UPLOAD_ERR_EXTENSION => 'Upload file dihentikan oleh ekstensi PHP.',
+            ];
+            return back()->withErrors(['file' => $errorMap[$errorCode] ?? 'File gagal diunggah ke server (Error: ' . $errorCode . ').']);
+        }
+
+        $request->validate([
+            'academic_year_id' => 'nullable|exists:academic_years,id',
+            'auto_activate' => 'nullable',
+        ]);
+
+        $extension = $uploadedFile->getClientOriginalExtension();
+
+        if (!in_array(strtolower($extension), ['csv', 'txt', 'xlsx', 'xls'])) {
+            return back()->withErrors(['file' => 'Format file harus berupa Excel (.xlsx) atau CSV (.csv).']);
+        }
+
+        try {
+            $parsedStudents = $this->customerImportService->parseFile($uploadedFile->getRealPath(), $extension);
+
+            if (empty($parsedStudents)) {
+                return back()->withErrors(['file' => 'Tidak ada data siswa/nasabah yang valid ditemukan dalam file. Pastikan format kolom sesuai.']);
+            }
+
+            $autoActivate = $request->boolean('auto_activate', false);
+            $academicYearId = $request->filled('academic_year_id') ? (int) $request->academic_year_id : null;
+
+            $result = $this->customerImportService->import($parsedStudents, $autoActivate, $academicYearId);
+
+            $message = "Import berhasil: {$result['imported']} nasabah baru ditambahkan, {$result['updated']} diperbarui.";
+            if ($result['skipped'] > 0) {
+                $message .= " ({$result['skipped']} baris dilewati/kosong)";
+            }
+
+            if (!empty($result['errors'])) {
+                return redirect()->route('admin.customers')->with('error', implode(' ', $result['errors']));
+            }
+
+            return redirect()->route('admin.customers')->with('success', $message);
+        } catch (\Throwable $e) {
+            return back()->withErrors(['file' => 'Gagal memproses file import: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Buka Rekening & Aktifkan Login untuk nasabah yang di-import tanpa rekening.
+     */
+    public function openAccountForCustomer(Request $request, Customer $customer): RedirectResponse
+    {
+        $request->validate([
+            'major' => 'nullable|string|max:10',
+            'initial_deposit' => 'nullable|numeric|min:0',
+            'phone' => 'nullable|string|max:20',
+            'email' => 'nullable|email|max:255',
+        ]);
+
+        try {
+            $customer = $this->customerService->openAccountForCustomer($customer, [
+                'major' => $request->input('major'),
+                'initial_deposit' => $request->input('initial_deposit', 0),
+                'phone' => $request->input('phone'),
+                'email' => $request->input('email'),
+            ]);
+
+            if ($customer->pending_email) {
+                try {
+                    $this->sendCustomerEmailVerification($customer);
+                } catch (\Throwable) {
+                    // Abaikan jika SMTP belum dikonfigurasi
+                }
+            }
+
+            return redirect()->route('admin.customers')->with([
+                'success' => "Rekening untuk nasabah '{$customer->name}' berhasil dibuka dan akun login telah aktif.",
+                'new_customer_credentials' => [
+                    'name' => $customer->name,
+                    'account_number' => $customer->bankAccount->account_number ?? '-',
+                    'balance' => $customer->bankAccount->balance ?? 0,
+                    'username' => $customer->customerAccount->username ?? strtolower($customer->nis),
+                    'password' => $customer->plain_password ?? ('Bk' . $customer->nis . '!'),
+                    'pin' => $customer->plain_pin ?? substr(str_pad((string) abs(crc32($customer->nis)), 6, '0', STR_PAD_LEFT), 0, 6),
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal membuka rekening nasabah: ' . $e->getMessage());
+        }
     }
 
     private function sendCustomerEmailVerification(Customer $customer): void
@@ -250,18 +389,44 @@ class AdminController extends Controller
         return view('admin.accounts', compact('accounts', 'search'));
     }
 
-    public function toggleAccountStatus(BankAccount $bankAccount): RedirectResponse
+    public function toggleAccountStatus(Request $request, BankAccount $bankAccount): RedirectResponse
     {
         if (auth()->user()?->role !== 'administrator') {
             abort(403, 'Hanya Administrator yang dapat mengubah status rekening.');
         }
 
-        $this->bankAccountService->toggleStatus($bankAccount);
+        // Jika diakses via GET (misal refresh browser), arahkan kembali dengan aman ke daftar rekening
+        if ($request->isMethod('GET')) {
+            return redirect()->route('admin.accounts');
+        }
 
-        $statusText = $bankAccount->status === 'active' ? 'diaktifkan' : 'dinonaktifkan';
+        // Jika rekening sedang aktif dan ingin dinonaktifkan, ajukan persetujuan ke nasabah
+        if ($bankAccount->status === 'active') {
+            $customer = $bankAccount->customer;
+            if ($customer) {
+                $customer->update([
+                    'deactivation_requested_at' => now(),
+                    'deactivation_reason' => 'Pengajuan penonaktifan rekening oleh Administrator.'
+                ]);
+                return redirect()->route('admin.accounts')
+                    ->with('success', "Permintaan penonaktifan rekening {$bankAccount->account_number} telah dikirim ke dashboard nasabah untuk disetujui (Approve).");
+            }
+        }
+
+        // Jika sedang nonaktif, aktifkan kembali langsung
+        $this->bankAccountService->toggleStatus($bankAccount);
+        $customer = $bankAccount->customer;
+        if ($customer) {
+            $customer->update([
+                'status' => 'active',
+                'deactivation_requested_at' => null,
+                'deactivation_reason' => null,
+            ]);
+            $customer->customerAccount?->update(['status' => 'active']);
+        }
 
         return redirect()->route('admin.accounts')
-            ->with('success', "Rekening nasabah {$bankAccount->account_number} berhasil {$statusText}.");
+            ->with('success', "Rekening nasabah {$bankAccount->account_number} berhasil diaktifkan kembali.");
     }
 
     /**

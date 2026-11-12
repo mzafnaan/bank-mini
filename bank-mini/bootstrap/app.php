@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->api(prepend: [
+            \App\Http\Middleware\QueryTokenAuth::class,
+        ]);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'force.password.change' => \App\Http\Middleware\ForcePasswordChange::class,

@@ -38,7 +38,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-900 mb-1">Tahun Ajaran Tujuan *</label>
                     <select name="target_academic_year_id" id="filterTargetYear" onchange="this.form.submit()"
-                        class="w-full px-3 py-2 border border-blue-500 rounded-md text-sm font-semibold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-blue-50/20">
+                        class="w-full px-3 py-2 border border-blue-500 rounded-md text-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600 bg-blue-50/20">
                         <option value="">-- Pilih Tahun Ajaran Tujuan --</option>
                         @foreach($academicYears as $year)
                             <option value="{{ $year->id }}" {{ (string)$targetYearId === (string)$year->id ? 'selected' : '' }}>

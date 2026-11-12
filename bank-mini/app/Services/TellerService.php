@@ -69,6 +69,33 @@ class TellerService
     }
 
     /**
+     * Query Rekap Transaksi Menggunakan INNER JOIN Multi-Tabel (Standar Kompetensi UKK Basis Data).
+     * Menggabungkan 4 tabel sekaligus: transactions -> bank_accounts -> customers -> users (teller).
+     */
+    public function getTransactionReportWithInnerJoin(?int $limit = 50): \Illuminate\Support\Collection
+    {
+        return DB::table('transactions')
+            ->join('bank_accounts', 'transactions.bank_account_id', '=', 'bank_accounts.id')
+            ->join('customers', 'bank_accounts.customer_id', '=', 'customers.id')
+            ->join('users', 'transactions.teller_id', '=', 'users.id')
+            ->select(
+                'transactions.id as transaction_id',
+                'transactions.type as transaction_type',
+                'transactions.amount as transaction_amount',
+                'transactions.created_at as transaction_date',
+                'bank_accounts.account_number',
+                'bank_accounts.balance as current_balance',
+                'customers.nis',
+                'customers.name as customer_name',
+                'customers.class_group',
+                'users.name as teller_name'
+            )
+            ->orderBy('transactions.created_at', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
      * Search and identify a bank account by Account Number, Customer NIS, Name, or QR Code content.
      */
     public function identifyAccount(string $keyword): ?BankAccount

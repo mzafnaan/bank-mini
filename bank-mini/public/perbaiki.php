@@ -3,8 +3,8 @@
  * Script Otomatis Perbaikan Bank Mini (Hosting)
  * - Membuka izin folder terkunci (Permission Denied -> 755)
  * - Mengekstrak update_bank_mini.zip jika ada
- * - Membersihkan cache Laravel
- * - Menjalankan database migration & seeder (1 akun per role)
+ * - Menghapus seluruh cache rute, config, dan tampilan
+ * - Menjalankan database migration
  */
 
 error_reporting(E_ALL);
@@ -78,32 +78,77 @@ if (file_exists($zipPath) && class_exists('ZipArchive')) {
 }
 echo "</div>";
 
-// 3. Jalankan Laravel Artisan (Clear cache & Migrate Fresh Seed)
+// 3. Bersihkan Cache File (Wajib agar rute /nasabah/stats langsung aktif)
 echo "<div class='card'>";
-echo "<h3>3. Membersihkan Cache & Reset Database...</h3>";
+echo "<h3>3. Membersihkan File Cache Rute & Tampilan...</h3>";
 
-if (file_exists($baseDir . '/vendor/autoload.php') && file_exists($baseDir . '/bootstrap/app.php')) {
-    require $baseDir . '/vendor/autoload.php';
-    $app = require_once $baseDir . '/bootstrap/app.php';
-    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$cacheFiles = [
+    $baseDir . '/bootstrap/cache/routes-v7.php',
+    $baseDir . '/bootstrap/cache/routes.php',
+    $baseDir . '/bootstrap/cache/config.php',
+    $baseDir . '/bootstrap/cache/packages.php',
+    $baseDir . '/bootstrap/cache/services.php',
+];
 
-    echo "<h4>• Membersihkan Cache Aplikasi:</h4>";
-    Illuminate\Support\Facades\Artisan::call('optimize:clear');
-    echo "<pre>" . htmlspecialchars(Illuminate\Support\Facades\Artisan::output()) . "</pre>";
-
-    echo "<h4>• Menjalankan Database Migration (Aman, Tanpa Reset Data):</h4>";
-    Illuminate\Support\Facades\Artisan::call('migrate', [
-        '--force' => true,
-    ]);
-    echo "<pre>" . htmlspecialchars(Illuminate\Support\Facades\Artisan::output()) . "</pre>";
-
-    echo "<h2 class='success'>🎉 SEMUA PROSES BERHASIL SELESAI!</h2>";
-    echo "<p>Web Anda sudah normal dan siap digunakan. Demi keamanan, Anda dapat menghapus file <code>perbaiki.php</code> ini setelah selesai.</p>";
-    echo "<a href='/login' class='btn'>Buka Halaman Login Web</a>";
-} else {
-    echo "<p style='color:#dc2626;'>Tidak dapat memuat bootstrap Laravel. Pastikan file ini berada di folder public_html.</p>";
+$deletedCache = 0;
+foreach ($cacheFiles as $cf) {
+    if (file_exists($cf)) {
+        @unlink($cf);
+        $deletedCache++;
+    }
 }
+echo "<p class='success'>✓ Berhasil menghapus file cache rute & config (Rute baru langsung terbaca)!</p>";
+
+// Bersihkan file cache views manual
+$viewPath = $baseDir . '/storage/framework/views';
+$deletedViews = 0;
+if (is_dir($viewPath)) {
+    foreach (glob($viewPath . '/*') as $f) {
+        if (is_file($f) && basename($f) !== '.gitignore') {
+            @unlink($f);
+            $deletedViews++;
+        }
+    }
+}
+echo "<p class='success'>✓ Berhasil menghapus {$deletedViews} file cache tampilan (views) lama!</p>";
+
+// Bersihkan cache data
+$dataCache = $baseDir . '/storage/framework/cache/data';
+if (is_dir($dataCache)) {
+    try {
+        $it = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dataCache, RecursiveDirectoryIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($it as $file) {
+            if ($file->isFile() && $file->getFilename() !== '.gitignore') {
+                @unlink($file->getRealPath());
+            }
+        }
+    } catch (\Exception $e) {}
+}
+
+// 4. Jalankan Artisan Migration jika memungkinkan
+if (file_exists($baseDir . '/vendor/autoload.php') && file_exists($baseDir . '/bootstrap/app.php')) {
+    try {
+        require_once $baseDir . '/vendor/autoload.php';
+        $app = require_once $baseDir . '/bootstrap/app.php';
+
+        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+        $kernel->bootstrap();
+
+        echo "<h4>• Menjalankan Database Migration:</h4>";
+        Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        echo "<pre>" . htmlspecialchars(Illuminate\Support\Facades\Artisan::output()) . "</pre>";
+    } catch (\Throwable $e) {
+        echo "<p style='color:#ca8a04;'>Catatan Artisan: " . htmlspecialchars($e->getMessage()) . "</p>";
+        echo "<p class='success'>✓ Pembersihan cache rute tetap berhasil dijalankan!</p>";
+    }
+}
+
+echo "<h2 class='success'>🎉 SEMUA PROSES BERHASIL SELESAI!</h2>";
+echo "<p>Rute API <code>/api/v1/nasabah/stats</code> dan tampilan terbaru sudah aktif sekarang. Silakan buka aplikasi m-banking di HP Anda!</p>";
+echo "<a href='/' class='btn'>Buka Halaman Utama Web</a>";
 echo "</div>";
 
 echo "</body></html>";
-

@@ -9,8 +9,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware('throttle:10,1')->post('/auth/login', [AuthApiController::class, 'login']);
     Route::middleware('throttle:3,1')->post('/auth/forgot-password', [AuthApiController::class, 'forgotPassword']);
 
-    // Protected customer routes
-    Route::middleware(['auth:sanctum', 'role:customer', 'throttle:60,1'])->group(function () {
+    // Protected customer routes (generous throttle for mobile active polling & browsing)
+    Route::middleware(['auth:sanctum', 'role:customer', 'throttle:240,1'])->group(function () {
         // Customer auth & security
         Route::prefix('auth')->group(function () {
             Route::get('/me', [AuthApiController::class, 'me']);
@@ -27,13 +27,20 @@ Route::prefix('v1')->group(function () {
         // Nasabah operations
         Route::prefix('nasabah')->group(function () {
             Route::get('/dashboard', [NasabahApiController::class, 'dashboard']);
+            Route::get('/stats', [NasabahApiController::class, 'stats']);
             Route::get('/riwayat', [NasabahApiController::class, 'transactionHistory']);
             Route::get('/riwayat/{id}', [NasabahApiController::class, 'transactionDetail']);
+            Route::get('/mutasi/export-excel', [NasabahApiController::class, 'exportExcel']);
+            Route::get('/mutasi/print', [NasabahApiController::class, 'printReport']);
             Route::get('/rekening', [NasabahApiController::class, 'accountInfo']);
 
-            // Withdrawal Requests (Mobile PIN Verification - strict throttle to protect 6-digit PIN)
+            // Deactivation Approval (Nasabah approves / rejects admin request)
+            Route::post('/deactivation/approve', [NasabahApiController::class, 'approveDeactivation']);
+            Route::post('/deactivation/reject', [NasabahApiController::class, 'rejectDeactivation']);
+
+            // Withdrawal Requests (Mobile PIN Verification - dedicated prefix prevents clash with polling)
             Route::get('/withdrawal-requests/pending', [NasabahApiController::class, 'pendingWithdrawalRequest']);
-            Route::middleware('throttle:5,1')->post('/withdrawal-requests/{withdrawalRequest}/authorize', [NasabahApiController::class, 'authorizeWithdrawal']);
+            Route::middleware('throttle:10,1,pin_auth')->post('/withdrawal-requests/{withdrawalRequest}/authorize', [NasabahApiController::class, 'authorizeWithdrawal']);
             Route::post('/withdrawal-requests/{withdrawalRequest}/reject', [NasabahApiController::class, 'rejectWithdrawal']);
         });
     });

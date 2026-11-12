@@ -11,6 +11,48 @@
         </div>
     </div>
 
+    <!-- Pending Deactivation Approval Request by Admin -->
+    @if($customer && $customer->deactivation_requested_at)
+        <div class="mb-6 bg-amber-50 border border-amber-300 rounded-lg p-5 text-amber-950">
+            <div class="flex items-start gap-3.5">
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0 text-amber-700 mt-0.5">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-200 text-amber-900 mb-1">
+                        Persetujuan Diperlukan
+                    </span>
+                    <h2 class="text-base font-bold text-slate-900">Pengajuan Penonaktifan Rekening oleh Administrator</h2>
+                    <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+                        Administrator telah mengajukan penonaktifan untuk akun dan rekening Anda pada <strong>{{ $customer->deactivation_requested_at->format('d F Y H:i') }}</strong>.
+                        @if($customer->deactivation_reason)
+                            <br><span class="italic text-slate-500">Alasan: "{{ $customer->deactivation_reason }}"</span>
+                        @endif
+                    </p>
+                    <p class="text-xs text-amber-800 mt-2 font-medium">
+                        Jika Anda menyetujui, rekening tabungan Anda akan dinonaktifkan dan sesi login Anda akan diakhiri. Apakah Anda menyetujui penonaktifan ini?
+                    </p>
+                    <div class="mt-4 flex flex-wrap items-center gap-2.5">
+                        <form action="{{ route('customer.deactivation.approve') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENYETUJUI penonaktifan rekening ini? Akun Anda akan dinonaktifkan.');">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs rounded-md shadow-sm transition">
+                                Setujui Penonaktifan
+                            </button>
+                        </form>
+                        <form action="{{ route('customer.deactivation.reject') }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin MENOLAK penonaktifan rekening ini?');">
+                            @csrf
+                            <button type="submit" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-xs rounded-md transition">
+                                Tolak
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Inactive Account Banner -->
     @if($bankAccount && $bankAccount->status === 'inactive')
         <div class="mb-6 p-3.5 bg-red-50 border border-red-200 text-red-800 text-sm rounded-md flex items-start gap-2">

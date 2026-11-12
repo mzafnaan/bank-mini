@@ -22,6 +22,8 @@ class Customer extends Model
         'class_group',
         'academic_year_id',
         'status',
+        'deactivation_requested_at',
+        'deactivation_reason',
         'phone',
         'email',
         'email_verified_at',
@@ -32,6 +34,7 @@ class Customer extends Model
     {
         return [
             'email_verified_at' => 'datetime',
+            'deactivation_requested_at' => 'datetime',
         ];
     }
 

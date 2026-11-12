@@ -13,6 +13,7 @@ use App\Models\WithdrawalRequest;
 use App\Notifications\VerifyCustomerEmailNotification;
 use App\Services\AuthService;
 use App\Services\CustomerWithdrawalService;
+use App\Services\SimpleXlsxExportService;
 use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -386,5 +387,273 @@ class CustomerController extends Controller
 
         return redirect()->route('login')
             ->with('success', "Alamat email {$customer->email} berhasil diverifikasi! Sekarang Anda dapat menggunakannya untuk pemulihan akun jika lupa password.");
+    }
+
+    /**
+     * Cetak Laporan Mutasi Rekening Nasabah (Minimalist Print View).
+     */
+    public function printTransactions(Request $request): View
+    {
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+        $customer = $customerAccount->customer;
+        $bankAccount = $customer->bankAccount;
+
+        $type = $request->query('type');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        // Hitung Saldo Awal sebelum tanggal mulai
+        $openingBalance = 0;
+        if (!empty($startDate)) {
+            $priorDeposits = Transaction::where('bank_account_id', $bankAccount?->id)
+                ->where('type', 'deposit')
+                ->whereDate('created_at', '<', $startDate)
+                ->sum('amount');
+            $priorWithdrawals = Transaction::where('bank_account_id', $bankAccount?->id)
+                ->where('type', 'withdrawal')
+                ->whereDate('created_at', '<', $startDate)
+                ->sum('amount');
+            $openingBalance = $priorDeposits - $priorWithdrawals;
+        }
+
+        $query = Transaction::with('teller')
+            ->where('bank_account_id', $bankAccount?->id)
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc');
+
+        if (!empty($type) && in_array($type, ['deposit', 'withdrawal'], true)) {
+            $query->where('type', $type);
+        }
+        if (!empty($startDate)) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+        if (!empty($endDate)) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
+        $transactions = $query->get();
+
+        $runningBalance = $openingBalance;
+        $totalDeposit = 0;
+        $totalWithdrawal = 0;
+
+        $items = $transactions->map(function ($t) use (&$runningBalance, &$totalDeposit, &$totalWithdrawal) {
+            if ($t->type === 'deposit') {
+                $runningBalance += $t->amount;
+                $totalDeposit += $t->amount;
+            } else {
+                $runningBalance -= $t->amount;
+                $totalWithdrawal += $t->amount;
+            }
+            $t->running_balance = $runningBalance;
+            return $t;
+        });
+
+        $closingBalance = $runningBalance;
+        $periodLabel = (!empty($startDate) && !empty($endDate))
+            ? date('d/m/Y', strtotime($startDate)) . ' s/d ' . date('d/m/Y', strtotime($endDate))
+            : (!empty($startDate) ? 'Mulai ' . date('d/m/Y', strtotime($startDate)) : (!empty($endDate) ? 'Sampai ' . date('d/m/Y', strtotime($endDate)) : 'Semua Periode'));
+
+        return response()
+            ->view('customer.print_transactions', compact(
+                'customer',
+                'bankAccount',
+                'items',
+                'openingBalance',
+                'closingBalance',
+                'totalDeposit',
+                'totalWithdrawal',
+                'startDate',
+                'endDate',
+                'periodLabel',
+                'type'
+            ))
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 01 Jan 1990 00:00:00 GMT');
+    }
+
+    /**
+     * Export Mutasi Rekening Nasabah ke File Excel (.xlsx OpenXML format).
+     */
+    public function exportTransactionsExcel(Request $request)
+    {
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+        $customer = $customerAccount->customer;
+        $bankAccount = $customer->bankAccount;
+
+        $type = $request->query('type');
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $openingBalance = 0;
+        if (!empty($startDate)) {
+            $priorDeposits = Transaction::where('bank_account_id', $bankAccount?->id)
+                ->where('type', 'deposit')
+                ->whereDate('created_at', '<', $startDate)
+                ->sum('amount');
+            $priorWithdrawals = Transaction::where('bank_account_id', $bankAccount?->id)
+                ->where('type', 'withdrawal')
+                ->whereDate('created_at', '<', $startDate)
+                ->sum('amount');
+            $openingBalance = $priorDeposits - $priorWithdrawals;
+        }
+
+        $query = Transaction::with('teller')
+            ->where('bank_account_id', $bankAccount?->id)
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc');
+
+        if (!empty($type) && in_array($type, ['deposit', 'withdrawal'], true)) {
+            $query->where('type', $type);
+        }
+        if (!empty($startDate)) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+        if (!empty($endDate)) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
+        $transactions = $query->get();
+
+        $accountNo = $bankAccount?->account_number ?? 'Rekening';
+        $filename = 'Mutasi_' . $accountNo . '_' . date('Ymd_His') . '.xlsx';
+
+        $periodLabel = (!empty($startDate) && !empty($endDate))
+            ? date('d/m/Y', strtotime($startDate)) . ' s/d ' . date('d/m/Y', strtotime($endDate))
+            : (!empty($startDate) ? 'Mulai ' . date('d/m/Y', strtotime($startDate)) : (!empty($endDate) ? 'Sampai ' . date('d/m/Y', strtotime($endDate)) : 'Semua Periode'));
+
+        $metaPairs = [
+            [
+                'L_label' => 'Nama Nasabah',
+                'L_val' => $customer->name,
+                'R_label' => 'No. Rekening',
+                'R_val' => $bankAccount?->account_number ?? '-',
+                'R_is_acc' => true,
+            ],
+            [
+                'L_label' => 'NIS / Kelas',
+                'L_val' => ($customer->nis ?? '-') . ' / ' . ($customer->class ?? '') . ' ' . ($customer->class_group ?? ''),
+                'R_label' => 'Periode Mutasi',
+                'R_val' => $periodLabel,
+            ],
+            [
+                'L_label' => 'Tanggal Export',
+                'L_val' => date('d/m/Y H:i:s'),
+                'R_label' => 'Status Rekening',
+                'R_val' => $bankAccount?->status === 'active' ? 'Aktif' : 'Nonaktif',
+            ],
+        ];
+
+        $headers = ['No', 'Tanggal & Waktu', 'ID Transaksi', 'Tipe Transaksi', 'Setoran (Rp)', 'Penarikan (Rp)', 'Saldo Akhir (Rp)', 'Petugas Teller'];
+
+        $rows = [];
+        $rows[] = [
+            ['v' => '-', 's' => 8],
+            ['v' => $startDate ? date('d/m/Y 00:00', strtotime($startDate)) : '-', 's' => 8],
+            ['v' => 'SALDO-AWAL', 's' => 7],
+            ['v' => 'Saldo Awal Periode', 's' => 7],
+            ['v' => 0, 's' => 9],
+            ['v' => 0, 's' => 9],
+            ['v' => $openingBalance, 's' => 10],
+            ['v' => 'Sistem', 's' => 8],
+        ];
+
+        $runningBalance = $openingBalance;
+        $totalDeposit = 0;
+        $totalWithdrawal = 0;
+        $no = 1;
+
+        foreach ($transactions as $t) {
+            $isDeposit = ($t->type === 'deposit');
+            if ($isDeposit) {
+                $runningBalance += $t->amount;
+                $totalDeposit += $t->amount;
+                $creditVal = (int) $t->amount;
+                $debitVal = 0;
+            } else {
+                $runningBalance -= $t->amount;
+                $totalWithdrawal += $t->amount;
+                $creditVal = 0;
+                $debitVal = (int) $t->amount;
+            }
+
+            $rows[] = [
+                ['v' => $no++, 's' => 8],
+                ['v' => $t->created_at ? $t->created_at->format('d/m/Y H:i') : '-', 's' => 8],
+                ['v' => $t->code, 's' => 7],
+                ['v' => $isDeposit ? 'Setoran Tunai' : 'Penarikan Tunai', 's' => 7],
+                ['v' => $creditVal, 's' => 9],
+                ['v' => $debitVal, 's' => 9],
+                ['v' => $runningBalance, 's' => 10],
+                ['v' => $t->teller?->name ?? '-', 's' => 8],
+            ];
+        }
+
+        $summary = [
+            ['v' => 'TOTAL PERIODE', 's' => 11],
+            ['v' => '', 's' => 11],
+            ['v' => '', 's' => 11],
+            ['v' => '', 's' => 11],
+            ['v' => $totalDeposit, 's' => 12],
+            ['v' => $totalWithdrawal, 's' => 12],
+            ['v' => $runningBalance, 's' => 12],
+            ['v' => '-', 's' => 11],
+        ];
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'xlsx_');
+        SimpleXlsxExportService::create($tempPath, $metaPairs, $headers, $rows, $summary);
+
+        $downloadHeaders = [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+        ];
+
+        return response()->download($tempPath, $filename, $downloadHeaders)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Nasabah menyetujui (Approve) pengajuan penonaktifan rekening oleh Admin.
+     */
+    public function approveDeactivation(Request $request): RedirectResponse
+    {
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+        $customer = $customerAccount->customer;
+
+        if (!$customer->deactivation_requested_at) {
+            return redirect()->route('customer.dashboard')->with('error', 'Tidak ada permintaan penonaktifan yang aktif.');
+        }
+
+        app(\App\Services\CustomerService::class)->approveDeactivation($customer);
+
+        // Logout customer session
+        auth()->guard('customer_web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->with('success', 'Rekening Anda telah resmi dinonaktifkan sesuai persetujuan Anda.');
+    }
+
+    /**
+     * Nasabah menolak pengajuan penonaktifan rekening oleh Admin.
+     */
+    public function rejectDeactivation(Request $request): RedirectResponse
+    {
+        /** @var \App\Models\CustomerAccount $customerAccount */
+        $customerAccount = auth()->guard('customer_web')->user();
+        $customer = $customerAccount->customer;
+
+        if (!$customer->deactivation_requested_at) {
+            return redirect()->route('customer.dashboard')->with('error', 'Tidak ada permintaan penonaktifan yang aktif.');
+        }
+
+        app(\App\Services\CustomerService::class)->rejectDeactivation($customer);
+
+        return redirect()->route('customer.dashboard')->with('success', 'Permintaan penonaktifan rekening berhasil ditolak. Rekening Anda tetap aktif.');
     }
 }

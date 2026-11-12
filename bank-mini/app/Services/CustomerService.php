@@ -53,7 +53,7 @@ class CustomerService
             $rawClass = trim($data['class']);
             $class = $rawClass;
             $classGroup = ! empty($data['class_group']) ? trim($data['class_group']) : null;
-            if (! $classGroup && preg_match('/^(X|XI|XII)\s+(.+)$/i', $rawClass, $matches)) {
+            if (! $classGroup && preg_match('/^(XII|XI|X)\s+(.+)$/i', $rawClass, $matches)) {
                 $class = strtoupper($matches[1]);
                 $classGroup = trim($matches[2]);
             }
@@ -170,7 +170,7 @@ class CustomerService
         $rawClass = trim($data['class']);
         $class = $rawClass;
         $classGroup = array_key_exists('class_group', $data) ? (! empty($data['class_group']) ? trim($data['class_group']) : null) : $customer->class_group;
-        if (! $classGroup && preg_match('/^(X|XI|XII)\s+(.+)$/i', $rawClass, $matches)) {
+        if (! $classGroup && preg_match('/^(XII|XI|X)\s+(.+)$/i', $rawClass, $matches)) {
             $class = strtoupper($matches[1]);
             $classGroup = trim($matches[2]);
         }
@@ -188,7 +188,22 @@ class CustomerService
         }
 
         if (array_key_exists('status', $data) && ! empty($data['status'])) {
-            $updateData['status'] = $data['status'];
+            // Business Rule: Jika admin ingin menonaktifkan nasabah yang sedang aktif,
+            // perlu persetujuan (approve) dari nasabah terlebih dahulu (tidak langsung nonaktif).
+            if ($data['status'] === 'inactive' && $customer->status === 'active') {
+                $updateData['deactivation_requested_at'] = now();
+                $updateData['deactivation_reason'] = !empty($data['deactivation_reason'])
+                    ? trim($data['deactivation_reason'])
+                    : 'Pengajuan penonaktifan rekening oleh Administrator.';
+            } elseif ($data['status'] === 'active') {
+                $updateData['status'] = 'active';
+                $updateData['deactivation_requested_at'] = null;
+                $updateData['deactivation_reason'] = null;
+                $customer->bankAccount?->update(['status' => 'active']);
+                $customer->customerAccount?->update(['status' => 'active']);
+            } else {
+                $updateData['status'] = $data['status'];
+            }
         }
 
         if (array_key_exists('email', $data)) {
@@ -219,5 +234,152 @@ class CustomerService
         }
 
         return $updated;
+    }
+
+    /**
+     * Nasabah menyetujui permintaan penonaktifan akun oleh Admin.
+     */
+    public function approveDeactivation(Customer $customer): bool
+    {
+        return DB::transaction(function () use ($customer) {
+            $customer->update([
+                'status' => 'inactive',
+                'deactivation_requested_at' => null,
+            ]);
+            $customer->bankAccount?->update(['status' => 'inactive']);
+            $customer->customerAccount?->update(['status' => 'inactive']);
+            return true;
+        });
+    }
+
+    /**
+     * Nasabah menolak permintaan penonaktifan akun oleh Admin.
+     */
+    public function rejectDeactivation(Customer $customer): bool
+    {
+        return $customer->update([
+            'deactivation_requested_at' => null,
+            'deactivation_reason' => null,
+        ]);
+    }
+
+    /**
+     * Admin membatalkan pengajuan penonaktifan akun nasabah.
+     */
+    public function cancelDeactivationRequest(Customer $customer): bool
+    {
+        return $customer->update([
+            'deactivation_requested_at' => null,
+            'deactivation_reason' => null,
+        ]);
+    }
+
+    /**
+     * Buka Rekening & Buat Akun Login untuk nasabah yang sudah terdaftar (misal hasil import massal).
+     * Nasabah yang di-import belum memiliki rekening dan akun login.
+     * Saat admin membuka rekening:
+     * - Dibuat BankAccount dengan saldo awal (default 0 atau sesuai input)
+     * - Dibuat CustomerAccount (username = NIS, password = Bk{NIS}!, PIN = crc32 hash)
+     * - Jika saldo awal > 0, dicatat Transaksi Deposit + Jurnal Debit Kas (101) & Credit Tabungan (201).
+     */
+    public function openAccountForCustomer(Customer $customer, array $data = []): Customer
+    {
+        return DB::transaction(function () use ($customer, $data) {
+            // Check if customer already has a bank account
+            if ($customer->bankAccount) {
+                return $customer;
+            }
+
+            // Determine Major Code (AK, BR, BD, MP, DKV, RPL, TKJ)
+            $major = ! empty($data['major']) ? strtoupper(trim($data['major'])) : null;
+            $validMajors = ['AK', 'BR', 'BD', 'MP', 'DKV', 'RPL', 'TKJ'];
+
+            if (! $major || ! in_array($major, $validMajors, true)) {
+                $combinedClass = trim($customer->class . ' ' . ($customer->class_group ?? ''));
+                if (preg_match('/\b(AK|BR|BD|MP|DKV|RPL|TKJ)\b/i', $combinedClass, $matches)) {
+                    $major = strtoupper($matches[1]);
+                } else {
+                    $major = 'RPL';
+                }
+            }
+
+            // 1. Auto-generate Bank Account [KODE JURUSAN]-[NOMOR URUT 3 DIGIT]
+            $accountNumber = $this->bankAccountService->generateAccountNumber($major);
+            $qrCode = $accountNumber;
+            $initialDeposit = ! empty($data['initial_deposit']) ? (float) $data['initial_deposit'] : 0;
+
+            $bankAccount = BankAccount::create([
+                'customer_id' => $customer->id,
+                'account_number' => $accountNumber,
+                'balance' => $initialDeposit,
+                'status' => 'active',
+                'qr_code' => $qrCode,
+            ]);
+
+            // If initial deposit is provided, record deposit transaction and journal entries
+            if ($initialDeposit > 0) {
+                $tellerId = ! empty($data['teller_id'])
+                    ? (int) $data['teller_id']
+                    : (User::where('role', 'teller')->where('status', 'active')->orderBy('id')->value('id')
+                        ?? User::where('role', 'teller')->orderBy('id')->value('id')
+                        ?? (auth()->id() ?? User::where('role', 'administrator')->value('id') ?? 1));
+
+                $transaction = Transaction::create([
+                    'bank_account_id' => $bankAccount->id,
+                    'teller_id' => $tellerId,
+                    'type' => 'deposit',
+                    'amount' => $initialDeposit,
+                ]);
+
+                // Journal: Debit Kas (101), Credit Tabungan Nasabah (201)
+                JournalEntry::create([
+                    'transaction_id' => $transaction->id,
+                    'account_code' => '101',
+                    'type' => 'debit',
+                    'amount' => $initialDeposit,
+                ]);
+
+                JournalEntry::create([
+                    'transaction_id' => $transaction->id,
+                    'account_code' => '201',
+                    'type' => 'credit',
+                    'amount' => $initialDeposit,
+                ]);
+            }
+
+            // 2. Auto-create Customer Account for Web & Mobile API Login if not exists
+            $temporaryPassword = 'Bk' . $customer->nis . '!';
+            $temporaryPin = substr(str_pad((string) abs(crc32($customer->nis)), 6, '0', STR_PAD_LEFT), 0, 6);
+
+            if (! $customer->customerAccount) {
+                $username = strtolower(trim($customer->nis));
+                CustomerAccount::create([
+                    'customer_id' => $customer->id,
+                    'username' => $username,
+                    'password' => Hash::make($temporaryPassword),
+                    'pin' => Hash::make($temporaryPin),
+                    'first_login' => true,
+                    'status' => 'active',
+                ]);
+            }
+
+            // Update customer phone / pending_email if provided during account opening
+            $customerUpdates = [];
+            if (! empty($data['phone'])) {
+                $customerUpdates['phone'] = trim($data['phone']);
+            }
+            if (! empty($data['email'])) {
+                $customerUpdates['pending_email'] = strtolower(trim($data['email']));
+            }
+            if (! empty($customerUpdates)) {
+                $customer->update($customerUpdates);
+            }
+
+            $customer->load(['bankAccount', 'customerAccount']);
+            $customer->plain_password = $temporaryPassword;
+            $customer->plain_pin = $temporaryPin;
+
+            return $customer;
+        });
     }
 }

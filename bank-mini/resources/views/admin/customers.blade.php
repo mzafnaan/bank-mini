@@ -6,12 +6,21 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-900">Data Nasabah</h1>
-            <p class="text-sm text-slate-500">Proses pendaftaran nasabah baru otomatis membuat Rekening Bank dan Akun Login Nasabah.</p>
+            <p class="text-sm text-slate-500">Kelola data nasabah, pembukaan rekening tabungan, dan akun login.</p>
         </div>
-        <button onclick="document.getElementById('modalAddCustomer').classList.remove('hidden')"
-            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md shadow-sm transition">
-            + Tambah Nasabah
-        </button>
+        <div class="flex items-center gap-2.5 flex-wrap">
+            <button onclick="document.getElementById('modalImportCustomer').classList.remove('hidden')"
+                class="inline-flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-md shadow-sm transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                </svg>
+                Import Massal (Excel/CSV)
+            </button>
+            <button onclick="document.getElementById('modalAddCustomer').classList.remove('hidden')"
+                class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md shadow-sm transition">
+                <span>+</span> Tambah Nasabah
+            </button>
+        </div>
     </div>
 
     @if(request('search'))
@@ -27,30 +36,35 @@
             <table class="w-full text-left text-sm text-slate-600">
                 <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500 border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-3">NIS</th>
-                        <th class="px-6 py-3">Nama Nasabah</th>
-                        <th class="px-6 py-3">Kelas & Rombel</th>
-                        <th class="px-6 py-3">Tahun Ajaran</th>
-                        <th class="px-6 py-3">Status</th>
-                        <th class="px-6 py-3">Telepon</th>
-                        <th class="px-6 py-3">Email</th>
-                        <th class="px-6 py-3">Nomor Rekening</th>
-                        <th class="px-6 py-3 text-right whitespace-nowrap">Aksi</th>
+                        <th class="px-5 py-3.5 whitespace-nowrap">NIS</th>
+                        <th class="px-5 py-3.5">Nama Nasabah</th>
+                        <th class="px-5 py-3.5 whitespace-nowrap">Kelas & Rombel</th>
+                        <th class="px-5 py-3.5 whitespace-nowrap">Tahun Ajaran</th>
+                        <th class="px-5 py-3.5 whitespace-nowrap">Status</th>
+                        <th class="px-5 py-3.5 whitespace-nowrap">Telepon</th>
+                        <th class="px-5 py-3.5">Email</th>
+                        <th class="px-5 py-3.5 whitespace-nowrap">Nomor Rekening</th>
+                        <th class="px-5 py-3.5 text-right whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @forelse($customers as $customer)
                         <tr class="hover:bg-slate-50 transition">
-                            <td class="px-6 py-4 text-slate-700 font-semibold">{{ $customer->nis }}</td>
-                            <td class="px-6 py-4 font-semibold text-slate-900">{{ $customer->name }}</td>
-                            <td class="px-6 py-4 text-slate-700 font-medium">{{ $customer->full_class }}</td>
-                            <td class="px-6 py-4 text-xs">
+                            <td class="px-5 py-3.5 text-slate-700 font-semibold whitespace-nowrap">{{ $customer->nis }}</td>
+                            <td class="px-5 py-3.5 font-semibold text-slate-900">{{ $customer->name }}</td>
+                            <td class="px-5 py-3.5 text-slate-700 font-medium whitespace-nowrap">{{ $customer->full_class }}</td>
+                            <td class="px-5 py-3.5 text-xs whitespace-nowrap">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700">
                                     {{ $customer->academicYear?->name ?? 'Belum Diatur' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4">
-                                @if($customer->status === 'active' || $customer->status === 'aktif')
+                            <td class="px-5 py-3.5 whitespace-nowrap">
+                                @if($customer->deactivation_requested_at)
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md bg-amber-50 text-amber-700 border border-amber-200" title="Pengajuan dikirim pada {{ $customer->deactivation_requested_at->format('d/m/Y H:i') }}">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                        Menunggu Approve Nonaktif
+                                    </span>
+                                @elseif($customer->status === 'active' || $customer->status === 'aktif')
                                     <span class="px-2.5 py-1 text-xs font-medium rounded-md bg-blue-50 text-blue-700">
                                         Aktif
                                     </span>
@@ -64,8 +78,8 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-slate-600">{{ $customer->phone ?? '-' }}</td>
-                            <td class="px-6 py-4 text-slate-600">
+                            <td class="px-5 py-3.5 text-slate-600 whitespace-nowrap">{{ $customer->phone ?? '-' }}</td>
+                            <td class="px-5 py-3.5 text-slate-600">
                                 @if($customer->pending_email)
                                     {{ $customer->pending_email }}
                                     <span class="block text-xs text-amber-600">Menunggu verifikasi</span>
@@ -73,21 +87,38 @@
                                     {{ $customer->email ?? '-' }}
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-5 py-3.5 whitespace-nowrap">
                                 @if($customer->bankAccount)
-                                    <span class="inline-flex items-center px-2.5 py-1 text-xs rounded-md bg-blue-50 text-blue-700">
+                                    <span class="inline-flex items-center px-2.5 py-1 text-xs font-mono font-medium rounded-md bg-blue-50 text-blue-700">
                                         {{ $customer->bankAccount->account_number }}
                                     </span>
                                 @else
-                                    <span class="text-xs text-slate-400 italic">Belum ada</span>
+                                    <span class="text-xs text-slate-400 italic font-medium">Kosong</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 text-right whitespace-nowrap">
+                            <td class="px-5 py-3.5 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-1.5">
+                                    @if(!$customer->bankAccount)
+                                        <button onclick="openAccountModal({{ json_encode($customer) }})"
+                                            class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition whitespace-nowrap"
+                                            title="Buka Rekening & Aktifkan Login Nasabah">
+                                            Buka Rekening
+                                        </button>
+                                    @endif
                                     <button onclick="editCustomer({{ json_encode($customer) }})"
                                         class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 rounded hover:bg-blue-100 transition whitespace-nowrap">
                                         Edit
                                     </button>
+                                    @if($customer->deactivation_requested_at)
+                                        <form action="{{ route('admin.customers.cancel-deactivation', $customer) }}" method="POST" class="inline-flex" onsubmit="return confirm('Batalkan pengajuan penonaktifan nasabah {{ $customer->name }}?')">
+                                            @csrf
+                                            <button type="submit"
+                                                class="inline-flex items-center justify-center px-2.5 py-1 text-xs font-medium text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 rounded transition whitespace-nowrap"
+                                                title="Batalkan pengajuan penonaktifan akun nasabah">
+                                                Batal Req
+                                            </button>
+                                        </form>
+                                    @endif
                                     @if($customer->customerAccount)
                                         <form action="{{ route('admin.customers.reset-password', $customer) }}" method="POST" class="inline-flex" onsubmit="return confirm('Apakah Anda yakin ingin mereset password akun {{ $customer->name }}? Password acak sementara akan dibuat dan nasabah wajib mengubahnya saat login.')">
                                             @csrf
@@ -109,11 +140,16 @@
                 </tbody>
             </table>
         </div>
-        @if($customers->hasPages())
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50">
-                {{ $customers->links() }}
+        <div class="px-6 py-3.5 border-t border-slate-200/80 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+            <div class="whitespace-nowrap">
+                Menampilkan <span class="font-semibold text-slate-700">{{ $customers->firstItem() ?? 0 }}</span> sampai <span class="font-semibold text-slate-700">{{ $customers->lastItem() ?? 0 }}</span> dari <span class="font-semibold text-slate-700">{{ $customers->total() }}</span> nasabah
             </div>
-        @endif
+            @if($customers->hasPages())
+                <div class="[&_p]:hidden">
+                    {{ $customers->onEachSide(1)->links() }}
+                </div>
+            @endif
+        </div>
     </div>
 
     <!-- Modal Add Customer -->
@@ -246,11 +282,14 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Status Nasabah *</label>
-                    <select id="edit_status" name="status" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                    <select id="edit_status" name="status" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm" onchange="toggleDeactivationNotice(this.value)">
                         <option value="active">Aktif</option>
-                        <option value="inactive">Nonaktif</option>
+                        <option value="inactive">Nonaktif (Minta Persetujuan Nasabah)</option>
                         <option value="graduated">Lulus</option>
                     </select>
+                    <div id="deactivation_notice" class="hidden text-[11px] text-amber-800 bg-amber-50 border border-amber-200 p-2.5 rounded-md mt-1.5 leading-relaxed">
+                        ⚠️ <strong>Perlu Persetujuan Nasabah:</strong> Mengubah status ke Nonaktif akan mengirimkan permintaan persetujuan (approve) ke dashboard nasabah. Rekening baru akan nonaktif setelah disetujui oleh nasabah.
+                    </div>
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Tahun Ajaran</label>
@@ -285,7 +324,178 @@
         </div>
     </div>
 
+    <!-- Modal Import Massal Customer -->
+    <div id="modalImportCustomer" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full p-6 my-8">
+            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0 border border-emerald-100">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Import Nasabah Massal</h3>
+                        <p class="text-xs text-slate-500">Unggah file Excel (.xlsx) atau CSV (.csv)</p>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('modalImportCustomer').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none">&times;</button>
+            </div>
+
+            <form action="{{ route('admin.customers.import') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Pilih File Excel / CSV *</label>
+                    <input type="file" name="file" accept=".xlsx,.xls,.csv,.txt" required
+                        class="w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 border border-slate-300 rounded-lg cursor-pointer p-1.5">
+                    <p class="text-[11px] text-slate-400 mt-1">Mendukung format <strong>.xlsx</strong> (Excel) dan <strong>.csv</strong> hingga 10MB.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 uppercase mb-1.5">Tahun Ajaran</label>
+                    <select name="academic_year_id" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                        <option value="">Otomatis (Sesuai file atau Tahun Ajaran Aktif)</option>
+                        @foreach($academicYears ?? [] as $ay)
+                            <option value="{{ $ay->id }}">{{ $ay->name }} {{ $ay->is_active ? '(Aktif)' : '' }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <!-- Info Box Format File -->
+                <div class="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs text-slate-600 space-y-2">
+                    <div class="font-semibold text-slate-800 flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Format File yang Otomatis Dikenali:
+                    </div>
+                    <ul class="list-disc list-inside space-y-1 text-[11px] text-slate-600 pl-1">
+                        <li><strong>Daftar Hadir / Absen Sekolah:</strong> Bisa langsung unggah file absensi sekolah Anda (seperti <code>Absen_2026-2027.xlsx</code>) tanpa perlu ubah format sama sekali.</li>
+                        <li><strong>Format Tabel Ringkas:</strong> Baris judul dengan kolom <code>NIS</code>, <code>NAMA</code>, <code>KELAS</code>, <code>ROMBEL</code> (No. Telp & Email dapat diisi belakangan saat siswa menabung).</li>
+                    </ul>
+                    <div class="pt-2 flex items-center justify-between border-t border-slate-200 text-[11px]">
+                        <span class="text-slate-500">Butuh template kolom standar?</span>
+                        <a href="{{ route('admin.customers.import-template') }}" class="font-semibold text-emerald-600 hover:text-emerald-700 underline inline-flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            Unduh Template CSV
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Aturan Akun Nasabah Import -->
+                <div class="p-3 bg-amber-50/80 rounded-lg border border-amber-200 text-xs text-amber-900 leading-relaxed">
+                    <div class="font-bold flex items-center gap-1.5 text-amber-950 mb-1">
+                        <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Ketentuan Rekening Nasabah Hasil Import:
+                    </div>
+                    Sesuai kebijakan sistem, siswa hasil import berstatus <strong>Belum Memiliki Rekening</strong> (saldo Rp 0) dan belum dapat login. Nasabah cukup datang ke loket/Admin untuk <strong>Buka Rekening</strong> saat melakukan setoran awal.
+                </div>
+
+                <div class="flex items-center gap-2 pt-1">
+                    <input type="checkbox" id="auto_activate" name="auto_activate" value="1" class="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500">
+                    <label for="auto_activate" class="text-xs text-slate-700 font-medium">
+                        Langsung buat Rekening & Login otomatis sekarang (Saldo Rp 0)
+                    </label>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="document.getElementById('modalImportCustomer').classList.add('hidden')" 
+                        class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-medium text-sm rounded-lg transition">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                        class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-sm rounded-lg shadow-sm transition inline-flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                        </svg>
+                        Mulai Import Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Buka Rekening untuk Nasabah yang Diimport -->
+    <div id="modalOpenAccount" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-lg border border-slate-200 shadow-md max-w-md w-full p-6 my-8">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-900">Buka Rekening Nasabah</h3>
+                <button onclick="document.getElementById('modalOpenAccount').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none">&times;</button>
+            </div>
+
+            <form id="formOpenAccount" action="" method="POST" class="space-y-4">
+                @csrf
+                <div class="bg-slate-50 p-3 rounded-md border border-slate-200 text-xs">
+                    <div class="font-bold text-slate-900 text-sm" id="open_acc_name">-</div>
+                    <div class="mt-1 flex items-center gap-3 text-slate-500">
+                        <span>NIS: <strong class="text-slate-700 font-mono" id="open_acc_nis">-</strong></span>
+                        <span>•</span>
+                        <span>Kelas: <strong class="text-slate-700" id="open_acc_class">-</strong></span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Jurusan / Kode Rekening *</label>
+                    <select name="major" id="open_acc_major" required class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm bg-white">
+                        <option value="RPL">RPL - Rekayasa Perangkat Lunak</option>
+                        <option value="TKJ">TKJ - Teknik Komputer Jaringan</option>
+                        <option value="DKV">DKV - Desain Komunikasi Visual</option>
+                        <option value="AK">AK - Akuntansi</option>
+                        <option value="MP">MP - Manajemen Perkantoran</option>
+                        <option value="BD">BD - Bisnis Digital</option>
+                        <option value="BR">BR - Bisnis Retail</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Setoran Awal (Rp)</label>
+                    <input type="number" name="initial_deposit" min="0" step="1000" placeholder="0" value="0"
+                        class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">No. Telepon</label>
+                        <input type="tel" name="phone" id="open_acc_phone" placeholder="08xxxxxxxxxx" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" maxlength="15"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Email</label>
+                        <input type="email" name="email" id="open_acc_email" placeholder="nama@email.com"
+                            class="w-full px-3 py-2 border border-slate-300 rounded-md text-sm">
+                    </div>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="document.getElementById('modalOpenAccount').classList.add('hidden')" 
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-sm rounded-md transition">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-md transition">
+                        Buka Rekening
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        function toggleDeactivationNotice(val) {
+            const notice = document.getElementById('deactivation_notice');
+            if (notice) {
+                if (val === 'inactive') {
+                    notice.classList.remove('hidden');
+                } else {
+                    notice.classList.add('hidden');
+                }
+            }
+        }
+
         function editCustomer(customer) {
             document.getElementById('formEditCustomer').action = '/admin/customers/' + customer.id;
             document.getElementById('edit_nis').value = customer.nis;
@@ -293,6 +503,7 @@
             document.getElementById('edit_class').value = customer.class || 'X';
             document.getElementById('edit_class_group').value = customer.class_group || '';
             document.getElementById('edit_status').value = customer.status || 'active';
+            toggleDeactivationNotice(customer.status || 'active');
             document.getElementById('edit_academic_year_id').value = customer.academic_year_id || '';
             document.getElementById('edit_phone').value = customer.phone || '';
             document.getElementById('edit_email').value = customer.pending_email || customer.email || '';
@@ -314,6 +525,30 @@
             });
         }
 
+        function openAccountModal(customer) {
+            document.getElementById('formOpenAccount').action = '/admin/customers/' + customer.id + '/open-account';
+            document.getElementById('open_acc_name').innerText = customer.name;
+            document.getElementById('open_acc_nis').innerText = customer.nis;
+            document.getElementById('open_acc_class').innerText = (customer.class || '') + ' ' + (customer.class_group || '');
+            
+            // Auto detect major from class_group or name
+            const combined = ((customer.class || '') + ' ' + (customer.class_group || '')).toUpperCase();
+            const majors = ['AK', 'BR', 'BD', 'MP', 'DKV', 'RPL', 'TKJ'];
+            let foundMajor = 'RPL';
+            for (let m of majors) {
+                // Regex word boundary or direct match
+                const regex = new RegExp('\\b' + m + '\\b', 'i');
+                if (regex.test(combined)) {
+                    foundMajor = m;
+                    break;
+                }
+            }
+            document.getElementById('open_acc_major').value = foundMajor;
+            document.getElementById('open_acc_phone').value = customer.phone || '';
+            document.getElementById('open_acc_email').value = customer.pending_email || customer.email || '';
+            document.getElementById('modalOpenAccount').classList.remove('hidden');
+        }
+
         // Auto-detect jurusan from class group input
         document.getElementById('add_customer_class_group')?.addEventListener('input', function() {
             const val = this.value;
@@ -322,8 +557,6 @@
             if (match && select) {
                 select.value = match[1].toUpperCase();
             }
-        });
-    </script>
         });
     </script>
 

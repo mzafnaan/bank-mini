@@ -46,14 +46,18 @@ Route::middleware(['auth:web', 'role:administrator'])->prefix('admin')->name('ad
     // Customer Onboarding & Management
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
     Route::post('/customers', [AdminController::class, 'storeCustomer'])->name('customers.store');
-    Route::put('/customers/{customer}', [AdminController::class, 'updateCustomer'])->name('customers.update');
+    Route::post('/customers/import', [AdminController::class, 'importCustomers'])->name('customers.import');
+    Route::get('/customers/import-template', [AdminController::class, 'downloadImportTemplate'])->name('customers.import-template');
+    Route::post('/customers/{customer}/open-account', [AdminController::class, 'openAccountForCustomer'])->name('customers.open-account');
+    Route::match(['PUT', 'POST'], '/customers/{customer}', [AdminController::class, 'updateCustomer'])->name('customers.update');
+    Route::post('/customers/{customer}/cancel-deactivation', [AdminController::class, 'cancelCustomerDeactivation'])->name('customers.cancel-deactivation');
 
     // Admin Reset Customer Password
     Route::post('/customers/{customer}/reset-password', [AdminController::class, 'resetCustomerPassword'])->name('customers.reset-password');
 
     // Bank Account Management
     Route::get('/accounts', [AdminController::class, 'accounts'])->name('accounts');
-    Route::patch('/accounts/{bankAccount}/status', [AdminController::class, 'toggleAccountStatus'])->name('accounts.toggle-status');
+    Route::match(['GET', 'POST', 'PATCH'], '/accounts/{bankAccount}/status', [AdminController::class, 'toggleAccountStatus'])->name('accounts.toggle-status');
 
     // Accounting Audit
     Route::get('/journals', [AdminController::class, 'journals'])->name('journals');
@@ -119,6 +123,8 @@ use App\Http\Controllers\Web\CustomerController;
 Route::middleware(['auth:web,customer_web', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [CustomerController::class, 'dashboard'])->name('dashboard');
     Route::get('/transactions', [CustomerController::class, 'transactions'])->name('transactions');
+    Route::get('/transactions/print', [CustomerController::class, 'printTransactions'])->name('transactions.print');
+    Route::get('/transactions/export-excel', [CustomerController::class, 'exportTransactionsExcel'])->name('transactions.export-excel');
     Route::get('/qr-code', [CustomerController::class, 'qrCode'])->name('qr-code');
     Route::get('/security', [CustomerController::class, 'security'])->name('security');
     Route::post('/security/password', [CustomerController::class, 'updatePassword'])->name('security.password');
@@ -133,6 +139,10 @@ Route::middleware(['auth:web,customer_web', 'role:customer'])->prefix('customer'
     // Withdrawal Authorization & Rejection (BR-039, BR-040, DD-006)
     Route::post('/withdrawal-requests/{withdrawalRequest}/authorize', [CustomerController::class, 'authorizeWithdrawal'])->name('withdrawal.authorize');
     Route::post('/withdrawal-requests/{withdrawalRequest}/reject', [CustomerController::class, 'rejectWithdrawal'])->name('withdrawal.reject');
+
+    // Deactivation Approval by Customer
+    Route::post('/deactivation/approve', [CustomerController::class, 'approveDeactivation'])->name('deactivation.approve');
+    Route::post('/deactivation/reject', [CustomerController::class, 'rejectDeactivation'])->name('deactivation.reject');
 });
 
 // Customer Email Verification Link (Signed & Throttled)
