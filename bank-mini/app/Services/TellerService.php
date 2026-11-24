@@ -68,10 +68,6 @@ class TellerService
         ];
     }
 
-    /**
-     * Query Rekap Transaksi Menggunakan INNER JOIN Multi-Tabel (Standar Kompetensi UKK Basis Data).
-     * Menggabungkan 4 tabel sekaligus: transactions -> bank_accounts -> customers -> users (teller).
-     */
     public function getTransactionReportWithInnerJoin(?int $limit = 50): \Illuminate\Support\Collection
     {
         return DB::table('transactions')
