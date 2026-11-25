@@ -226,39 +226,53 @@ class _PendingDeactivationCardState extends State<PendingDeactivationCard> {
               children: [
                 // Tombol Tolak
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: _handleReject,
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFD1D5DB)),
-                      foregroundColor: const Color(0xFF374151),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    height: 44,
+                    child: OutlinedButton(
+                      onPressed: _handleReject,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Color(0xFFD1D5DB), width: 1.2),
+                        foregroundColor: const Color(0xFF374151),
+                        backgroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Tolak',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      child: const Text(
+                        'Tolak',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 // Tombol Setujui
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: _handleApprove,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFDC2626),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  child: SizedBox(
+                    height: 44,
+                    child: ElevatedButton(
+                      onPressed: _handleApprove,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
-                    ),
-                    child: const Text(
-                      'Setujui Nonaktif',
-                      style: TextStyle(fontWeight: FontWeight.w700),
+                      child: const Text(
+                        'Setujui Nonaktif',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ),

@@ -212,12 +212,13 @@ class ApiClient {
     if (endDate != null && endDate.isNotEmpty) params['end_date'] = endDate;
     if (type != null && type.isNotEmpty && type != 'all') params['type'] = type;
     if (token != null) params['token'] = token;
+    params['_t'] = DateTime.now().millisecondsSinceEpoch.toString();
 
     final query = Uri(queryParameters: params).query;
     return '${AppConstants.baseUrl}${AppConstants.apiPrefix}/nasabah/mutasi/print?$query';
   }
 
-  /// Build URL for exporting mutation report to Excel / CSV.
+  /// Build URL for exporting mutation report to Excel (.xlsx).
   Future<String> getExportExcelMutationUrl({String? startDate, String? endDate, String? type}) async {
     final token = await _storage.read(key: AppConstants.tokenKey);
     final params = <String, String>{};
@@ -225,6 +226,7 @@ class ApiClient {
     if (endDate != null && endDate.isNotEmpty) params['end_date'] = endDate;
     if (type != null && type.isNotEmpty && type != 'all') params['type'] = type;
     if (token != null) params['token'] = token;
+    params['_t'] = DateTime.now().millisecondsSinceEpoch.toString();
 
     final query = Uri(queryParameters: params).query;
     return '${AppConstants.baseUrl}${AppConstants.apiPrefix}/nasabah/mutasi/export-excel?$query';
